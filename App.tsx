@@ -1,20 +1,33 @@
+import { type ReactElement } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { useAuth } from '@/features/auth';
+import { useCouponUsage } from '@/features/coupons';
+import { useFavorites } from '@/features/spots/hooks/useFavorites';
+import { useSpotCatalog } from '@/features/spots/hooks/useSpotCatalog';
+import { RootNavigator } from '@/navigation';
 
-export default function App() {
+function AppContent(): ReactElement {
+  useAuth();
+  useSpotCatalog();
+  useCouponUsage();
+  useFavorites();
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      <StatusBar style="dark" />
+      <RootNavigator />
+    </>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
+export default function App(): ReactElement {
+  return (
+    <SafeAreaProvider>
+      <AppErrorBoundary>
+        <AppContent />
+      </AppErrorBoundary>
+    </SafeAreaProvider>
+  );
+}

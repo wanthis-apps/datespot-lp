@@ -1,5 +1,5 @@
 -- DateSpot 基盤スキーマ（Supabase SQL Editor でそのまま実行可能）
--- types/database.ts の Spot / Coupon / Favorite と対応させる。
+-- types/database.ts の Spot / Coupon / Favorite / Review と対応させる。
 -- 再実行しても落ちないよう、CREATE TABLE IF NOT EXISTS と
 -- DROP POLICY IF EXISTS / ON CONFLICT DO NOTHING を使う。
 
@@ -35,9 +35,20 @@ create table if not exists public.favorites (
   unique (user_id, spot_id)
 );
 
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  spot_id uuid not null references public.spots (id) on delete cascade,
+  user_id uuid not null,
+  user_name text not null,
+  rating integer not null check (rating between 1 and 5),
+  comment text not null,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.spots enable row level security;
 alter table public.coupons enable row level security;
 alter table public.favorites enable row level security;
+alter table public.reviews enable row level security;
 
 drop policy if exists "spots_select_public" on public.spots;
 create policy "spots_select_public"
@@ -81,6 +92,20 @@ create policy "favorites_delete_own"
   for delete
   to authenticated
   using (auth.uid() = user_id);
+
+drop policy if exists "reviews_select_public" on public.reviews;
+create policy "reviews_select_public"
+  on public.reviews
+  for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "reviews_insert_authenticated" on public.reviews;
+create policy "reviews_insert_authenticated"
+  on public.reviews
+  for insert
+  to authenticated
+  with check (true);
 
 insert into public.spots (
   id,
@@ -227,5 +252,52 @@ insert into public.coupons (
   'ケーキセット注文で会計から100円引き。',
   '2026-10-31 14:59:59+00',
   timezone('utc', now())
+)
+on conflict (id) do nothing;
+
+insert into public.reviews (
+  id,
+  spot_id,
+  user_id,
+  user_name,
+  rating,
+  comment,
+  created_at
+) values
+(
+  '40000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000001',
+  'あかり',
+  5,
+  '木漏れ日のテラスがとても良い雰囲気です。初デートにぴったりでした。',
+  '2026-08-12 04:20:00+00'
+),
+(
+  '40000000-0000-4000-8000-000000000002',
+  '10000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000002',
+  'そうた',
+  4,
+  'コーヒーが美味しく、会話が弾みました。',
+  '2026-07-03 11:10:00+00'
+),
+(
+  '40000000-0000-4000-8000-000000000003',
+  '10000000-0000-4000-8000-000000000002',
+  '30000000-0000-4000-8000-000000000002',
+  'そうた',
+  4,
+  'コースのペースがちょうど良く、記念日にも使えそうです。',
+  '2026-06-18 08:30:00+00'
+),
+(
+  '40000000-0000-4000-8000-000000000004',
+  '10000000-0000-4000-8000-000000000005',
+  '30000000-0000-4000-8000-000000000003',
+  'みお',
+  5,
+  '夜景がきれいで、風も心地よかったです。また来たいです。',
+  '2026-09-01 12:40:00+00'
 )
 on conflict (id) do nothing;

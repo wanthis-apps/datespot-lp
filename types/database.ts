@@ -29,3 +29,13 @@ export interface Favorite {
   spot_id: string;
   created_at: string;
 }
+
+export interface Review {
+  id: string;
+  spot_id: string;
+  user_id: string;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}

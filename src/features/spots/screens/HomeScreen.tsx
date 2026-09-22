@@ -2,7 +2,14 @@ import { useMemo, useState, type ReactElement } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorState, FilterBar, LoadingState, SearchBar, SpotDetailModal } from '@/components';
+import {
+  ErrorState,
+  FilterBar,
+  FilterChipSkeletonRow,
+  SearchBar,
+  SpotCardSkeleton,
+  SpotDetailModal,
+} from '@/components';
 import { mapCatalogSpot } from '../../../../hooks/mapRecords';
 import { applySearchAndSort } from '../../../../hooks/spotQuery';
 import { useSpots } from '../../../../hooks/useSpots';
@@ -88,7 +95,17 @@ export function HomeScreen(_props: HomeScreenProps): ReactElement {
     return (
       <View style={screenStyle}>
         <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
-        <LoadingState palette={palette} message="スポットを読み込み中です…" />
+        <View style={[styles.list, { paddingBottom: insets.bottom + 24 }]}>
+          <View style={styles.skeletonHeader}>
+            <FilterChipSkeletonRow palette={palette} />
+            <FilterChipSkeletonRow palette={palette} />
+          </View>
+          <View style={styles.skeletonList}>
+            <SpotCardSkeleton palette={palette} />
+            <SpotCardSkeleton palette={palette} />
+            <SpotCardSkeleton palette={palette} />
+          </View>
+        </View>
       </View>
     );
   }
@@ -206,5 +223,12 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     alignItems: 'center',
     gap: 12,
+  },
+  skeletonHeader: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  skeletonList: {
+    gap: 16,
   },
 });

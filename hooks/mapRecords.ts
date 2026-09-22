@@ -1,5 +1,5 @@
 import type { Coupon as CatalogCoupon, Spot as CatalogSpot } from '@/types';
-import type { Coupon, Spot, SpotCategory } from '../types/database';
+import type { Coupon, Review, Spot, SpotCategory } from '../types/database';
 
 export const FOUNDATION_CATEGORY_LABELS: Record<SpotCategory, string> = {
   cafe: 'カフェ',
@@ -217,4 +217,56 @@ export function mapCatalogCoupon(
       image_url: spot?.imageUrl ?? null,
     },
   };
+}
+
+export function mapReviewRow(row: unknown): Review | null {
+  const record = readRecord(row);
+  if (record === null) {
+    return null;
+  }
+
+  const id = toNullableString(record.id);
+  const spotId = toNullableString(record.spot_id);
+  const userId = toNullableString(record.user_id);
+  const userName = toNullableString(record.user_name);
+  const rating = toFiniteNumber(record.rating);
+  const comment = toNullableString(record.comment);
+  const createdAt = toNullableString(record.created_at);
+
+  if (
+    id === null ||
+    spotId === null ||
+    userId === null ||
+    userName === null ||
+    rating === null ||
+    rating < 1 ||
+    rating > 5 ||
+    comment === null ||
+    createdAt === null
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    spot_id: spotId,
+    user_id: userId,
+    user_name: userName,
+    rating: Math.round(rating),
+    comment,
+    created_at: createdAt,
+  };
+}
+
+export function formatReviewDate(createdAt: string): string {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) {
+    return '投稿日時不明';
+  }
+
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }

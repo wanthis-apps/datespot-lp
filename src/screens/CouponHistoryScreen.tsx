@@ -2,7 +2,7 @@ import { type ReactElement } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorState, LoadingState } from '@/components';
+import { CouponCardSkeleton, ErrorState } from '@/components';
 import { useCouponHistory } from '../../hooks/useCouponHistory';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { EmptyState } from './components/EmptyState';
@@ -28,10 +28,20 @@ export function CouponHistoryScreen(
     return (
       <View style={screenStyle}>
         <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
-        <LoadingState
-          palette={palette}
-          message="利用履歴を読み込み中です…"
-        />
+        <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          <View style={styles.header}>
+            <Text style={[styles.kicker, { color: palette.primary }]}>
+              History
+            </Text>
+            <Text style={[styles.heading, { color: palette.text }]}>
+              クーポン利用履歴
+            </Text>
+          </View>
+          <View style={styles.skeletonList}>
+            <CouponCardSkeleton palette={palette} />
+            <CouponCardSkeleton palette={palette} />
+          </View>
+        </View>
       </View>
     );
   }
@@ -179,5 +189,8 @@ const styles = StyleSheet.create({
   usedAt: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  skeletonList: {
+    gap: 14,
   },
 });

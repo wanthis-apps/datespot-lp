@@ -2,7 +2,12 @@ import { useMemo, useState, type ReactElement } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorState, LoadingState, SearchBar, SpotDetailModal } from '@/components';
+import {
+  ErrorState,
+  SearchBar,
+  SpotCardSkeleton,
+  SpotDetailModal,
+} from '@/components';
 import { applySearchAndSort, type SpotSortBy } from '../../hooks/spotQuery';
 import { useFavoriteSpots } from '../../hooks/useFavoriteSpots';
 import { useSpotFilterStore } from '@/features/spots';
@@ -68,10 +73,21 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
     return (
       <View style={screenStyle}>
         <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
-        <LoadingState
-          palette={palette}
-          message="お気に入りを読み込み中です…"
-        />
+        <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          <View style={styles.header}>
+            <Text style={[styles.kicker, { color: palette.primary }]}>
+              Favorites
+            </Text>
+            <Text style={[styles.heading, { color: palette.text }]}>
+              お気に入り
+            </Text>
+          </View>
+          <View style={styles.skeletonList}>
+            <SpotCardSkeleton palette={palette} />
+            <SpotCardSkeleton palette={palette} />
+            <SpotCardSkeleton palette={palette} />
+          </View>
+        </View>
       </View>
     );
   }
@@ -190,5 +206,8 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 14,
+  },
+  skeletonList: {
+    gap: 14,
   },
 });

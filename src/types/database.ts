@@ -112,6 +112,44 @@ export type Database = {
           },
         ];
       };
+      reviews: {
+        Row: {
+          id: string;
+          spot_id: string;
+          user_id: string;
+          user_name: string;
+          rating: number;
+          comment: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          spot_id: string;
+          user_id: string;
+          user_name: string;
+          rating: number;
+          comment: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          spot_id?: string;
+          user_id?: string;
+          user_name?: string;
+          rating?: number;
+          comment?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'reviews_spot_id_fkey';
+            columns: ['spot_id'];
+            isOneToOne: false;
+            referencedRelation: 'spots';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       user_coupons_history: {
         Row: {
           user_id: string;
@@ -197,6 +235,7 @@ export type SpotRow = Tables<'spots'>;
 export type CouponRow = Tables<'coupons'>;
 export type UserRow = Tables<'users'>;
 export type UserCouponHistoryRow = Tables<'user_coupons_history'>;
+export type ReviewRow = Tables<'reviews'>;
 
 export type SpotRowWithCoupons = SpotRow & {
   coupons: CouponRow[];

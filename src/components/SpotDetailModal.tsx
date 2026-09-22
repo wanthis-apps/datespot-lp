@@ -1,11 +1,14 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,11 +17,13 @@ import { useCouponList } from '../../hooks/useCouponList';
 import {
   FOUNDATION_CATEGORY_LABELS,
   formatPriceRange,
+  formatReviewDate,
   formatValidUntil,
 } from '../../hooks/mapRecords';
+import { useReviews } from '../../hooks/useReviews';
 import { useFavorites } from '@/features/spots/hooks/useFavorites';
 import type { Palette } from '@/theme';
-import type { Coupon, Spot } from '../../types/database';
+import type { Coupon, Review, Spot } from '../../types/database';
 import { Button } from './Button';
 import { RemoteImage } from './RemoteImage';
 
@@ -38,7 +43,20 @@ export function SpotDetailModal({
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { coupons } = useCouponList();
+  const {
+    reviews,
+    averageRating,
+    reviewCount,
+    loading: reviewsLoading,
+    submitting,
+    error: reviewsError,
+    submitReview,
+  } = useReviews(spot?.id ?? null);
   const [showCoupons, setShowCoupons] = useState(false);
+  const [draftRating, setDraftRating] = useState(0);
+  const [draftComment, setDraftComment] = useState('');
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitOk, setSubmitOk] = useState<boolean | null>(null);
 
   const relatedCoupons = useMemo(() => {
     if (spot === null) {
@@ -82,9 +100,29 @@ export function SpotDetailModal({
     );
   };
 
+  const resetReviewForm = (): void => {
+    setDraftRating(0);
+    setDraftComment('');
+    setSubmitMessage(null);
+    setSubmitOk(null);
+  };
+
   const handleClose = (): void => {
     setShowCoupons(false);
+    resetReviewForm();
     onClose();
+  };
+
+  const handleSubmitReview = (): void => {
+    void (async () => {
+      const result = await submitReview(draftRating, draftComment);
+      setSubmitMessage(result.message);
+      setSubmitOk(result.ok);
+      if (result.ok) {
+        setDraftRating(0);
+        setDraftComment('');
+      }
+    })();
   };
 
   return (
@@ -95,7 +133,10 @@ export function SpotDetailModal({
       onRequestClose={handleClose}
       onDismiss={() => setShowCoupons(false)}
     >
-      <View style={styles.root}>
+      <KeyboardAvoidingView
+        style={styles.root}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="詳細を閉じる"
@@ -124,6 +165,7 @@ export function SpotDetailModal({
           {spot === null ? null : (
             <ScrollView
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.content}
             >
               <RemoteImage
@@ -181,6 +223,125 @@ export function SpotDetailModal({
                 />
               </View>
 
+              <View style={styles.reviewSection}>
+                <View style={styles.reviewHeader}>
+                  <Text style={[styles.sectionTitle, { color: palette.text }]}>
+                    レビュー・口コミ
+                  </Text>
+                  <View
+                    style={[
+                      styles.averageBadge,
+                      { backgroundColor: palette.coupon },
+                    ]}
+                  >
+                    <Ionicons
+                      name="star"
+                      size={14}
+                      color={palette.couponText}
+                    />
+                    <Text
+                      style={[styles.averageText, { color: palette.couponText }]}
+                    >
+                      {averageRating === null
+                        ? '— まだ評価なし'
+                        : `★ ${averageRating.toFixed(1)}  （${reviewCount}件）`}
+                    </Text>
+                  </View>
+                </View>
+
+                {reviewsError !== null ? (
+                  <Text style={[styles.empty, { color: palette.textSecondary }]}>
+                    {reviewsError}
+                  </Text>
+                ) : null}
+
+                {reviewsLoading && reviews.length === 0 ? (
+                  <Text style={[styles.empty, { color: palette.textSecondary }]}>
+                    口コミを読み込んでいます…
+                  </Text>
+                ) : reviews.length === 0 ? (
+                  <Text style={[styles.empty, { color: palette.textSecondary }]}>
+                    まだ口コミはありません。最初のレビューを書いてみましょう。
+                  </Text>
+                ) : (
+                  reviews.map((review) => (
+                    <ReviewListItem
+                      key={review.id}
+                      review={review}
+                      palette={palette}
+                    />
+                  ))
+                )}
+
+                <View
+                  style={[
+                    styles.reviewForm,
+                    {
+                      backgroundColor: palette.background,
+                      borderColor: palette.border,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.formLabel, { color: palette.text }]}>
+                    レビューを書く
+                  </Text>
+                  <Text
+                    style={[styles.formHint, { color: palette.textSecondary }]}
+                  >
+                    星を選んで、感想を入力してください。
+                  </Text>
+                  <StarPicker
+                    value={draftRating}
+                    palette={palette}
+                    onChange={setDraftRating}
+                  />
+                  <TextInput
+                    value={draftComment}
+                    onChangeText={setDraftComment}
+                    placeholder="雰囲気やおすすめポイントなど"
+                    placeholderTextColor={palette.muted}
+                    multiline
+                    textAlignVertical="top"
+                    style={[
+                      styles.commentInput,
+                      {
+                        color: palette.text,
+                        backgroundColor: palette.surface,
+                        borderColor: palette.border,
+                      },
+                    ]}
+                  />
+                  <Button
+                    label={submitting ? '投稿中…' : '投稿する'}
+                    onPress={handleSubmitReview}
+                    palette={palette}
+                    disabled={submitting}
+                  />
+                  {submitMessage !== null ? (
+                    <View
+                      style={[
+                        styles.submitMessage,
+                        { backgroundColor: palette.primaryMuted },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.submitMessageText,
+                          {
+                            color:
+                              submitOk === false
+                                ? palette.primary
+                                : palette.text,
+                          },
+                        ]}
+                      >
+                        {submitMessage}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+
               {showCoupons ? (
                 <View style={styles.couponSection}>
                   <Text style={[styles.sectionTitle, { color: palette.text }]}>
@@ -229,8 +390,82 @@ export function SpotDetailModal({
             </ScrollView>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
+  );
+}
+
+function StarPicker({
+  value,
+  palette,
+  onChange,
+}: {
+  value: number;
+  palette: Palette;
+  onChange?: (rating: number) => void;
+}): ReactElement {
+  return (
+    <View style={styles.starRow}>
+      {[1, 2, 3, 4, 5].map((star) => {
+        const selected = star <= value;
+        const icon = (
+          <Ionicons
+            name={selected ? 'star' : 'star-outline'}
+            size={22}
+            color={selected ? palette.couponText : palette.muted}
+          />
+        );
+
+        if (onChange === undefined) {
+          return <View key={star}>{icon}</View>;
+        }
+
+        return (
+          <Pressable
+            key={star}
+            accessibilityRole="button"
+            accessibilityLabel={`評価 ${star}`}
+            onPress={() => onChange(star)}
+            style={styles.starButton}
+          >
+            {icon}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function ReviewListItem({
+  review,
+  palette,
+}: {
+  review: Review;
+  palette: Palette;
+}): ReactElement {
+  return (
+    <View
+      style={[
+        styles.reviewCard,
+        {
+          backgroundColor: palette.background,
+          borderColor: palette.border,
+        },
+      ]}
+    >
+      <View style={styles.reviewMeta}>
+        <Text style={[styles.reviewName, { color: palette.text }]}>
+          {review.user_name}
+        </Text>
+        <Text style={[styles.reviewDate, { color: palette.muted }]}>
+          {formatReviewDate(review.created_at)}
+        </Text>
+      </View>
+      <StarPicker value={review.rating} palette={palette} />
+      <Text style={[styles.reviewComment, { color: palette.textSecondary }]}>
+        {review.comment}
+      </Text>
+    </View>
   );
 }
 
@@ -344,6 +579,91 @@ const styles = StyleSheet.create({
   },
   couponExpiry: {
     fontSize: 12,
+    fontWeight: '600',
+  },
+  reviewSection: {
+    gap: 12,
+    marginTop: 8,
+  },
+  reviewHeader: {
+    gap: 8,
+  },
+  averageBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  averageText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  reviewCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    gap: 8,
+  },
+  reviewMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  reviewName: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  reviewDate: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  reviewComment: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  reviewForm: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+  },
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  formHint: {
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  starRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  starButton: {
+    padding: 2,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 88,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  submitMessage: {
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  submitMessageText: {
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: '600',
   },
 });

@@ -2,7 +2,7 @@ import { type ReactElement } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorState, LoadingState } from '@/components';
+import { CouponCardSkeleton, ErrorState } from '@/components';
 import { useCouponList } from '../../hooks/useCouponList';
 import { useSpotFilterStore } from '@/features/spots';
 import type { TabScreenProps } from '@/navigation/types';
@@ -55,7 +55,21 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
     return (
       <View style={screenStyle}>
         <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
-        <LoadingState palette={palette} message="クーポンを読み込み中です…" />
+        <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          <View style={styles.header}>
+            <Text style={[styles.kicker, { color: palette.primary }]}>
+              Coupons
+            </Text>
+            <Text style={[styles.heading, { color: palette.text }]}>
+              クーポン一覧
+            </Text>
+          </View>
+          <View style={styles.skeletonList}>
+            <CouponCardSkeleton palette={palette} />
+            <CouponCardSkeleton palette={palette} />
+            <CouponCardSkeleton palette={palette} />
+          </View>
+        </View>
       </View>
     );
   }
@@ -151,5 +165,8 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 14,
+  },
+  skeletonList: {
+    gap: 14,
   },
 });

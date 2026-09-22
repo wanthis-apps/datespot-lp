@@ -84,13 +84,9 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    width: '100%',
-    height: '100%',
   },
   mapHost: {
     flex: 1,
-    width: '100%',
-    height: '100%',
   },
   badgeWrap: {
     position: 'absolute',

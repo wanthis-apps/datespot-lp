@@ -1,14 +1,9 @@
-import { type ReactElement, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { type ReactElement, useEffect, useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import type { Spot } from '@/types';
 import { getValidCoordinate, isSameRegion } from '../utils/mapCoordinates';
 import type { SpotMapProps } from './SpotMap.types';
-
-type MapLayoutSize = {
-  width: number;
-  height: number;
-};
 
 export function SpotMap({
   spots,
@@ -21,32 +16,8 @@ export function SpotMap({
 }: SpotMapProps): ReactElement {
   const mapRef = useRef<MapView>(null);
   const previousRegionRef = useRef(initialRegion);
-  const [layout, setLayout] = useState<MapLayoutSize | null>(null);
-
-  const handleContainerLayout = (event: LayoutChangeEvent): void => {
-    const { width, height } = event.nativeEvent.layout;
-    if (width <= 0 || height <= 0) {
-      return;
-    }
-
-    setLayout((current) => {
-      if (
-        current !== null &&
-        current.width === width &&
-        current.height === height
-      ) {
-        return current;
-      }
-      return { width, height };
-    });
-  };
 
   useEffect(() => {
-    if (layout === null) {
-      previousRegionRef.current = initialRegion;
-      return;
-    }
-
     const previousRegion = previousRegionRef.current;
     previousRegionRef.current = initialRegion;
     if (isSameRegion(previousRegion, initialRegion)) {
@@ -54,7 +25,7 @@ export function SpotMap({
     }
 
     mapRef.current?.animateToRegion(initialRegion, 280);
-  }, [initialRegion, layout]);
+  }, [initialRegion]);
 
   const handleMarkerPress = (spot: Spot): void => {
     onMarkerPress(spot.id);
@@ -72,48 +43,38 @@ export function SpotMap({
   };
 
   return (
-    <View
-      collapsable={false}
-      style={styles.container}
-      onLayout={handleContainerLayout}
-    >
-      {layout !== null ? (
-        <MapView
-          ref={mapRef}
-          style={{
-            flex: 1,
-            width: layout.width,
-            height: layout.height,
-          }}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={initialRegion}
-          onPress={onMapPress}
-          showsUserLocation={false}
-          showsCompass={false}
-        >
-          {spots.map((spot) => {
-            const coordinate = getValidCoordinate(spot);
-            if (coordinate === null) {
-              return null;
-            }
+    <View collapsable={false} style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={initialRegion}
+        onPress={onMapPress}
+        showsUserLocation={false}
+        showsCompass={false}
+      >
+        {spots.map((spot) => {
+          const coordinate = getValidCoordinate(spot);
+          if (coordinate === null) {
+            return null;
+          }
 
-            return (
-              <Marker
-                key={spot.id}
-                identifier={spot.id}
-                coordinate={coordinate}
-                pinColor={
-                  spot.id === selectedSpotId || spot.isPartnerStore
-                    ? pinColor
-                    : defaultPinColor
-                }
-                onPress={() => handleMarkerPress(spot)}
-                stopPropagation
-              />
-            );
-          })}
-        </MapView>
-      ) : null}
+          return (
+            <Marker
+              key={spot.id}
+              identifier={spot.id}
+              coordinate={coordinate}
+              pinColor={
+                spot.id === selectedSpotId || spot.isPartnerStore
+                  ? pinColor
+                  : defaultPinColor
+              }
+              onPress={() => handleMarkerPress(spot)}
+              stopPropagation
+            />
+          );
+        })}
+      </MapView>
     </View>
   );
 }
@@ -121,6 +82,8 @@ export function SpotMap({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  map: {
     width: '100%',
     height: '100%',
   },

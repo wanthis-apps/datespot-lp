@@ -5,12 +5,16 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 export type TabParamList = {
   Home: undefined;
   Map: undefined;
+  Coupons: undefined;
+  Favorites: undefined;
   MyPage: undefined;
 };
 
 export type RootStackParamList = {
+  Auth: undefined;
   Main: NavigatorScreenParams<TabParamList>;
   SpotDetail: { spotId: string };
+  CouponHistory: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

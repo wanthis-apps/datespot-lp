@@ -1,15 +1,9 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Palette } from '@/theme';
-import type { RelationshipStatus, SpotCategory, TimeOfDay } from '@/types';
-import {
-  CATEGORY_LABELS,
-  CATEGORY_OPTIONS,
-  RELATIONSHIP_LABELS,
-  RELATIONSHIP_OPTIONS,
-} from '../types';
+import type { RelationshipStatus, TimeOfDay } from '@/types';
+import { RELATIONSHIP_LABELS, RELATIONSHIP_OPTIONS } from '../types';
 import { FilterChipRow } from './FilterChipRow';
-import { SpotSearchBar } from './SpotSearchBar';
 import { TimeToggle } from './TimeToggle';
 
 type HomeHeaderProps = {
@@ -18,8 +12,6 @@ type HomeHeaderProps = {
   relationship: RelationshipStatus | null;
   area: string | null;
   areas: string[];
-  category: SpotCategory | null;
-  query: string;
   favoritesOnly: boolean;
   palette: Palette;
   sourceLabel: string;
@@ -27,10 +19,10 @@ type HomeHeaderProps = {
   onTimeOfDayChange: (value: TimeOfDay) => void;
   onRelationshipChange: (value: RelationshipStatus | null) => void;
   onAreaChange: (value: string | null) => void;
-  onCategoryChange: (value: SpotCategory | null) => void;
-  onQueryChange: (value: string) => void;
   onFavoritesOnlyChange: (value: boolean) => void;
   onReset: () => void;
+  searchBar?: ReactNode;
+  filterBar?: ReactNode;
 };
 
 export function HomeHeader({
@@ -39,8 +31,6 @@ export function HomeHeader({
   relationship,
   area,
   areas,
-  category,
-  query,
   favoritesOnly,
   palette,
   sourceLabel,
@@ -48,10 +38,10 @@ export function HomeHeader({
   onTimeOfDayChange,
   onRelationshipChange,
   onAreaChange,
-  onCategoryChange,
-  onQueryChange,
   onFavoritesOnlyChange,
   onReset,
+  searchBar,
+  filterBar,
 }: HomeHeaderProps): ReactElement {
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
@@ -60,7 +50,7 @@ export function HomeHeader({
       <Text style={[styles.source, { color: palette.textSecondary }]}>
         データソース: {sourceLabel}
       </Text>
-      <SpotSearchBar value={query} onChange={onQueryChange} palette={palette} />
+      {searchBar}
       <TimeToggle
         value={timeOfDay}
         onChange={onTimeOfDayChange}
@@ -94,23 +84,7 @@ export function HomeHeader({
           ]}
         />
       </View>
-      <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-          カテゴリー
-        </Text>
-        <FilterChipRow
-          value={category}
-          onChange={onCategoryChange}
-          palette={palette}
-          options={[
-            { value: null, label: 'すべて' },
-            ...CATEGORY_OPTIONS.map((item) => ({
-              value: item,
-              label: CATEGORY_LABELS[item],
-            })),
-          ]}
-        />
-      </View>
+      {filterBar}
       <View style={styles.section}>
         <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
           関係性

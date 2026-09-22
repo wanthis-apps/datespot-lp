@@ -1,18 +1,33 @@
-import { type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorState, LoadingState } from '@/components';
+import { ErrorState, FilterBar, LoadingState, SearchBar, SpotDetailModal } from '@/components';
+import { mapCatalogSpot } from '../../../../hooks/mapRecords';
+import { applySearchAndSort } from '../../../../hooks/spotQuery';
+import { useSpots } from '../../../../hooks/useSpots';
 import type { TabScreenProps } from '@/navigation/types';
 import type { Spot } from '@/types';
+import type { Spot as FoundationSpot } from '../../../../types/database';
 import { HomeHeader } from '../components/HomeHeader';
 import { SpotCard } from '../components/SpotCard';
 import { useHomeScreen } from '../hooks/useHomeScreen';
 
 type HomeScreenProps = TabScreenProps<'Home'>;
 
-export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
+export function HomeScreen(_props: HomeScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
+  const [selectedSpot, setSelectedSpot] = useState<FoundationSpot | null>(null);
+  const {
+    selectedCategory,
+    selectedPriceRange,
+    searchQuery,
+    sortBy,
+    setSelectedCategory,
+    setSelectedPriceRange,
+    setSearchQuery,
+    setSortBy,
+  } = useSpots();
   const {
     heading,
     timeOfDay,
@@ -20,7 +35,6 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
     area,
     areas,
     category,
-    query,
     favoritesOnly,
     favoriteSpotIds,
     spots,
@@ -33,12 +47,34 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
     setTimeOfDay,
     setRelationship,
     setArea,
-    setCategory,
-    setQuery,
     setFavoritesOnly,
     resetFilters,
     reload,
   } = useHomeScreen();
+
+  const visibleSpots = useMemo(() => {
+    const catalogById = new Map(spots.map((spot) => [spot.id, spot]));
+    const filtered = spots.flatMap((spot) => {
+      const mapped = mapCatalogSpot(spot);
+      if (selectedCategory !== null && mapped.category !== selectedCategory) {
+        return [];
+      }
+
+      if (
+        selectedPriceRange !== null &&
+        mapped.price_range !== selectedPriceRange
+      ) {
+        return [];
+      }
+
+      return [mapped];
+    });
+
+    return applySearchAndSort(filtered, searchQuery, sortBy).flatMap((spot) => {
+      const catalogSpot = catalogById.get(spot.id);
+      return catalogSpot === undefined ? [] : [catalogSpot];
+    });
+  }, [searchQuery, selectedCategory, selectedPriceRange, sortBy, spots]);
 
   const screenStyle = [
     styles.screen,
@@ -76,8 +112,8 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
     <View style={screenStyle}>
       <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
       <FlatList
-        data={spots}
-        extraData={`${timeOfDay}-${relationship}-${area}-${category}-${query}-${favoritesOnly}-${favoriteSpotIds.join(',')}-${sourceLabel}-${error ?? ''}`}
+        data={visibleSpots}
+        extraData={`${timeOfDay}-${relationship}-${area}-${category}-${searchQuery}-${sortBy}-${favoritesOnly}-${favoriteSpotIds.join(',')}-${sourceLabel}-${error ?? ''}-${selectedCategory ?? ''}-${selectedPriceRange ?? ''}`}
         keyExtractor={(item) => item.id}
         stickyHeaderIndices={[0]}
         keyboardShouldPersistTaps="handled"
@@ -93,8 +129,6 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
             relationship={relationship}
             area={area}
             areas={areas}
-            category={category}
-            query={query}
             favoritesOnly={favoritesOnly}
             palette={palette}
             sourceLabel={sourceLabel}
@@ -102,10 +136,26 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
             onTimeOfDayChange={setTimeOfDay}
             onRelationshipChange={setRelationship}
             onAreaChange={setArea}
-            onCategoryChange={setCategory}
-            onQueryChange={setQuery}
             onFavoritesOnlyChange={setFavoritesOnly}
             onReset={resetFilters}
+            searchBar={
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                palette={palette}
+              />
+            }
+            filterBar={
+              <FilterBar
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                selectedPriceRange={selectedPriceRange}
+                setSelectedPriceRange={setSelectedPriceRange}
+                palette={palette}
+              />
+            }
           />
         }
         ListEmptyComponent={
@@ -120,10 +170,16 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
             spot={item}
             palette={palette}
             onPress={() => {
-              navigation.navigate('SpotDetail', { spotId: item.id });
+              setSelectedSpot(mapCatalogSpot(item));
             }}
           />
         )}
+      />
+      <SpotDetailModal
+        visible={selectedSpot !== null}
+        spot={selectedSpot}
+        palette={palette}
+        onClose={() => setSelectedSpot(null)}
       />
     </View>
   );

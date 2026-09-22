@@ -4,6 +4,7 @@ export type { EnsureSessionResult } from './api/session';
 export { useAuth } from './hooks/useAuth';
 export type { UseAuthResult } from './hooks/useAuth';
 export { useAuthStore } from './store/authStore';
+export type { AuthActionResult } from './store/authStore';
 export { useMyPageScreen } from './hooks/useMyPageScreen';
 export type {
   CouponListItem,

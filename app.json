@@ -21,7 +21,8 @@
         "googleMaps": {
           "apiKey": "AIzaSyCXsEx-EP1t99Q3k-c6FUbKw0GeJXclbCg"
         }
-      }
+      },
+      "package": "com.anonymous.DateSpotapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,6 +34,11 @@
           "androidGoogleMapsApiKey": "AIzaSyCXsEx-EP1t99Q3k-c6FUbKw0GeJXclbCg"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "787781a1-0274-4da4-a8cd-db198d2c4c2f"
+      }
+    }
   }
 }

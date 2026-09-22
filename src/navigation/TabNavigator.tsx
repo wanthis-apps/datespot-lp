@@ -1,9 +1,9 @@
 import { type ComponentProps, type ReactElement } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MyPageScreen } from '@/features/auth';
 import { MapScreen } from '@/features/map';
 import { HomeScreen, useSpotFilterStore } from '@/features/spots';
+import { CouponsScreen, FavoritesScreen, ProfileScreen } from '@/screens';
 import { palettes } from '@/theme';
 import type { TabParamList } from './types';
 
@@ -19,12 +19,16 @@ type TabIconSet = {
 const TAB_ICONS: Record<keyof TabParamList, TabIconSet> = {
   Home: { focused: 'home', unfocused: 'home-outline' },
   Map: { focused: 'map', unfocused: 'map-outline' },
+  Coupons: { focused: 'ticket', unfocused: 'ticket-outline' },
+  Favorites: { focused: 'heart', unfocused: 'heart-outline' },
   MyPage: { focused: 'person', unfocused: 'person-outline' },
 };
 
 const TAB_LABELS: Record<keyof TabParamList, string> = {
   Home: 'ホーム',
   Map: 'マップ',
+  Coupons: 'クーポン',
+  Favorites: 'お気に入り',
   MyPage: 'マイページ',
 };
 
@@ -64,8 +68,18 @@ export function TabNavigator(): ReactElement {
         options={{ headerShown: false }}
       />
       <Tab.Screen
+        name="Coupons"
+        component={CouponsScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
         name="MyPage"
-        component={MyPageScreen}
+        component={ProfileScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>

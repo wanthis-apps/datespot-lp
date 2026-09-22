@@ -1,7 +1,9 @@
-import { type ReactElement } from 'react';
+import { memo, useCallback, useMemo, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RemoteImage } from '@/components';
+import { useArea } from '@/context';
+import { formatDistanceKm, haversineKm } from '../../../../hooks/geo';
 import type { Palette } from '@/theme';
 import type { Spot } from '@/types';
 import { useFavoriteStore } from '../store/favoriteStore';
@@ -15,7 +17,7 @@ type SpotCardProps = {
   onPress?: () => void;
 };
 
-export function SpotCard({
+function SpotCardComponent({
   spot,
   palette,
   onPress,
@@ -24,6 +26,26 @@ export function SpotCard({
     state.favoriteSpotIds.includes(spot.id),
   );
   const toggleFavorite = useFavoriteStore((state) => state.toggleFavorite);
+  const { area } = useArea();
+  const distanceLabel = useMemo(
+    () =>
+      formatDistanceKm(
+        haversineKm(
+          { latitude: area.latitude, longitude: area.longitude },
+          { latitude: spot.location.lat, longitude: spot.location.lng },
+        ),
+      ),
+    [
+      area.latitude,
+      area.longitude,
+      spot.location.lat,
+      spot.location.lng,
+    ],
+  );
+
+  const handleToggleFavorite = useCallback((): void => {
+    void toggleFavorite(spot.id);
+  }, [spot.id, toggleFavorite]);
 
   return (
     <Pressable
@@ -48,9 +70,7 @@ export function SpotCard({
           <FavoriteButton
             isFavorite={isFavorite}
             palette={palette}
-            onPress={() => {
-              void toggleFavorite(spot.id);
-            }}
+            onPress={handleToggleFavorite}
           />
         </View>
         {hasFreeCoupon(spot) ? (
@@ -64,7 +84,7 @@ export function SpotCard({
       <View style={styles.body}>
         <Text style={[styles.name, { color: palette.text }]}>{spot.name}</Text>
         <Text style={[styles.meta, { color: palette.textSecondary }]}>
-          {spot.area} ・ {CATEGORY_LABELS[spot.category]}
+          {spot.area} ・ {CATEGORY_LABELS[spot.category]} ・ {distanceLabel}
         </Text>
         <Text
           numberOfLines={2}
@@ -76,6 +96,8 @@ export function SpotCard({
     </Pressable>
   );
 }
+
+export const SpotCard = memo(SpotCardComponent);
 
 const styles = StyleSheet.create({
   card: {

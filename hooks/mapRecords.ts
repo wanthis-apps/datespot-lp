@@ -1,5 +1,13 @@
 import type { Coupon as CatalogCoupon, Spot as CatalogSpot } from '@/types';
-import type { Coupon, Review, Spot, SpotCategory } from '../types/database';
+import type {
+  Coupon,
+  Plan,
+  PlanSpot,
+  Review,
+  Spot,
+  SpotCategory,
+} from '../types/database';
+import { normalizeSpotTags, tagsForCatalogSpotId } from './spotTags';
 
 export const FOUNDATION_CATEGORY_LABELS: Record<SpotCategory, string> = {
   cafe: 'カフェ',
@@ -138,6 +146,7 @@ export function mapSpotRow(row: unknown): Spot | null {
     price_range: toFiniteNumber(record.price_range),
     image_url: toNullableString(record.image_url),
     created_at: toNullableString(record.created_at) ?? new Date().toISOString(),
+    tags: normalizeSpotTags(record.tags),
   };
 }
 
@@ -153,6 +162,7 @@ export function mapCatalogSpot(spot: CatalogSpot): Spot {
     price_range: null,
     image_url: spot.imageUrl,
     created_at: new Date(0).toISOString(),
+    tags: tagsForCatalogSpotId(spot.id),
   };
 }
 
@@ -231,6 +241,7 @@ export function mapReviewRow(row: unknown): Review | null {
   const userName = toNullableString(record.user_name);
   const rating = toFiniteNumber(record.rating);
   const comment = toNullableString(record.comment);
+  const helpfulCount = toFiniteNumber(record.helpful_count);
   const createdAt = toNullableString(record.created_at);
 
   if (
@@ -254,6 +265,8 @@ export function mapReviewRow(row: unknown): Review | null {
     user_name: userName,
     rating: Math.round(rating),
     comment,
+    helpful_count:
+      helpfulCount === null ? 0 : Math.max(0, Math.round(helpfulCount)),
     created_at: createdAt,
   };
 }
@@ -269,4 +282,95 @@ export function formatReviewDate(createdAt: string): string {
     month: 'short',
     day: 'numeric',
   });
+}
+
+export function mapPlanSpotRow(
+  row: unknown,
+  fallbackSpot?: Spot,
+): PlanSpot | null {
+  const record = readRecord(row);
+  if (record === null) {
+    return null;
+  }
+
+  const id = toNullableString(record.id);
+  const planId = toNullableString(record.plan_id);
+  const spotId = toNullableString(record.spot_id);
+  const orderIndex = toFiniteNumber(record.order_index);
+
+  if (id === null || planId === null || spotId === null || orderIndex === null) {
+    return null;
+  }
+
+  const nestedSpot =
+    mapSpotRow(record.spots) ?? mapSpotRow(record.spot) ?? fallbackSpot;
+
+  return {
+    id,
+    plan_id: planId,
+    spot_id: spotId,
+    order_index: Math.round(orderIndex),
+    visit_time: toNullableString(record.visit_time),
+    spot: nestedSpot,
+  };
+}
+
+export function mapPlanRow(
+  row: unknown,
+  spotById?: Map<string, Spot>,
+): Plan | null {
+  const record = readRecord(row);
+  if (record === null) {
+    return null;
+  }
+
+  const id = toNullableString(record.id);
+  const userId = toNullableString(record.user_id);
+  const title = toNullableString(record.title);
+  const createdAt = toNullableString(record.created_at);
+
+  if (id === null || userId === null || title === null || createdAt === null) {
+    return null;
+  }
+
+  const rawSpots = record.plan_spots;
+  const planSpots = Array.isArray(rawSpots)
+    ? rawSpots
+        .flatMap((item) => {
+          const mapped = mapPlanSpotRow(item);
+          if (mapped === null) {
+            return [];
+          }
+
+          const spot = mapped.spot ?? spotById?.get(mapped.spot_id);
+          return [{ ...mapped, spot }];
+        })
+        .sort((a, b) => a.order_index - b.order_index)
+    : [];
+
+  return {
+    id,
+    user_id: userId,
+    title,
+    description: toNullableString(record.description),
+    is_public: record.is_public === true,
+    created_at: createdAt,
+    plan_spots: planSpots,
+  };
+}
+
+export function attachPlanSpots(
+  plan: Plan,
+  spotById: Map<string, Spot>,
+): Plan {
+  return {
+    ...plan,
+    plan_spots: plan.plan_spots
+      .slice()
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((item) => ({
+        ...item,
+        spot: item.spot ?? spotById.get(item.spot_id),
+      })),
+  };
 }

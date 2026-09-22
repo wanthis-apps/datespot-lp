@@ -7,6 +7,7 @@ export type TabParamList = {
   Map: undefined;
   Coupons: undefined;
   Favorites: undefined;
+  Plans: undefined;
   MyPage: undefined;
 };
 
@@ -15,6 +16,12 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<TabParamList>;
   SpotDetail: { spotId: string };
   CouponHistory: undefined;
+  Notifications: undefined;
+  Faq: undefined;
+  Legal: { document?: 'terms' | 'privacy' } | undefined;
+  Contact: undefined;
+  NotificationSettings: undefined;
+  Onboarding: { replay?: boolean } | undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

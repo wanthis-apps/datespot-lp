@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Palette } from '@/theme';
@@ -10,7 +10,7 @@ type FavoriteButtonProps = {
   size?: 'card' | 'header';
 };
 
-export function FavoriteButton({
+function FavoriteButtonComponent({
   isFavorite,
   onPress,
   palette,
@@ -51,6 +51,8 @@ export function FavoriteButton({
     </Pressable>
   );
 }
+
+export const FavoriteButton = memo(FavoriteButtonComponent);
 
 const styles = StyleSheet.create({
   button: {

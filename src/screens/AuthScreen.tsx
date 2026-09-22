@@ -12,10 +12,9 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components';
+import { useAppTheme } from '@/context';
 import { useAuth } from '@/features/auth';
-import { useSpotFilterStore } from '@/features/spots';
 import type { RootStackScreenProps } from '@/navigation/types';
-import { palettes } from '@/theme';
 
 type AuthMode = 'login' | 'signup';
 
@@ -43,8 +42,7 @@ function validateAuthForm(email: string, password: string): string | null {
 
 export function AuthScreen({ navigation }: AuthScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
-  const palette = palettes[timeOfDay];
+  const { isDark, palette } = useAppTheme();
   const { signIn, signUp, continueAsGuest } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
@@ -122,7 +120,7 @@ export function AuthScreen({ navigation }: AuthScreenProps): ReactElement {
         },
       ]}
     >
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

@@ -3,6 +3,11 @@ import { getMockCoupons } from '@/features/coupons/api/couponRepository';
 import { useSpotCatalogStore } from '@/features/spots/store/spotCatalogStore';
 import { getSupabaseClient } from '@/services/supabase';
 import type { Coupon } from '../types/database';
+import {
+  notifyOfflineCache,
+  readCachedCoupons,
+  writeCachedCoupons,
+} from './dataCache';
 import { mapCatalogCoupon, mapCouponRow, toErrorMessage } from './mapRecords';
 
 export type UseCouponListResult = {
@@ -58,10 +63,24 @@ export function useCouponList(): UseCouponListResult {
       ),
     );
 
+    const applyFallback = async (reason: string | null): Promise<void> => {
+      const cached = await readCachedCoupons();
+      if (cached.length > 0) {
+        setCoupons(
+          cached.map((coupon) => attachSpotFallback(coupon, spotNameById)),
+        );
+        setError(null);
+        notifyOfflineCache();
+        return;
+      }
+
+      setCoupons(fallbackCoupons);
+      setError(fallbackCoupons.length === 0 ? reason : null);
+    };
+
     const client = getSupabaseClient();
     if (client === null) {
-      setCoupons(fallbackCoupons);
-      setError(null);
+      await applyFallback(null);
       setLoading(false);
       return;
     }
@@ -77,11 +96,8 @@ export function useCouponList(): UseCouponListResult {
           .select('*');
 
         if (plainError !== null) {
-          setCoupons(fallbackCoupons);
-          setError(
-            fallbackCoupons.length === 0
-              ? `クーポンの取得に失敗しました: ${plainError.message}`
-              : null,
+          await applyFallback(
+            `クーポンの取得に失敗しました: ${plainError.message}`,
           );
           return;
         }
@@ -89,9 +105,15 @@ export function useCouponList(): UseCouponListResult {
         const rows = Array.isArray(plainData) ? plainData : [];
         const mapped = rows.flatMap((row) => {
           const coupon = mapCouponRow(row);
-          return coupon === null ? [] : [attachSpotFallback(coupon, spotNameById)];
+          return coupon === null
+            ? []
+            : [attachSpotFallback(coupon, spotNameById)];
         });
-        setCoupons(mapped.length > 0 ? mapped : fallbackCoupons);
+        const next = mapped.length > 0 ? mapped : fallbackCoupons;
+        setCoupons(next);
+        if (mapped.length > 0) {
+          await writeCachedCoupons(mapped);
+        }
         return;
       }
 
@@ -100,13 +122,14 @@ export function useCouponList(): UseCouponListResult {
         const coupon = mapCouponRow(row);
         return coupon === null ? [] : [attachSpotFallback(coupon, spotNameById)];
       });
-      setCoupons(mapped.length > 0 ? mapped : fallbackCoupons);
+      const next = mapped.length > 0 ? mapped : fallbackCoupons;
+      setCoupons(next);
+      if (mapped.length > 0) {
+        await writeCachedCoupons(mapped);
+      }
     } catch (caught) {
-      setCoupons(fallbackCoupons);
-      setError(
-        fallbackCoupons.length === 0
-          ? `クーポンの取得に失敗しました: ${toErrorMessage(caught)}`
-          : null,
+      await applyFallback(
+        `クーポンの取得に失敗しました: ${toErrorMessage(caught)}`,
       );
     } finally {
       setLoading(false);

@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RemoteImage } from '@/components';
@@ -12,7 +12,7 @@ type SpotListRowProps = {
   onPress: () => void;
 };
 
-export function SpotListRow({
+function SpotListRowComponent({
   spot,
   palette,
   onPress,
@@ -44,6 +44,8 @@ export function SpotListRow({
     </Pressable>
   );
 }
+
+export const SpotListRow = memo(SpotListRowComponent);
 
 const styles = StyleSheet.create({
   row: {

@@ -12,6 +12,7 @@ export type Palette = {
   overlay: string;
   coupon: string;
   couponText: string;
+  danger: string;
 };
 
 export const palettes: Record<TimeOfDay, Palette> = {
@@ -27,6 +28,7 @@ export const palettes: Record<TimeOfDay, Palette> = {
     overlay: 'rgba(43, 29, 31, 0.45)',
     coupon: '#F3E2C5',
     couponText: '#8A5A12',
+    danger: '#B42318',
   },
   night: {
     background: '#161214',
@@ -40,5 +42,6 @@ export const palettes: Record<TimeOfDay, Palette> = {
     overlay: 'rgba(0, 0, 0, 0.5)',
     coupon: '#4A3A20',
     couponText: '#F3D7A0',
+    danger: '#F97066',
   },
 };

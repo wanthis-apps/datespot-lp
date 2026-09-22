@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import type { Palette } from '@/theme';
 
@@ -14,7 +14,7 @@ type FilterChipRowProps<T> = {
   palette: Palette;
 };
 
-export function FilterChipRow<T extends string | null>({
+function FilterChipRowComponent<T extends string | null>({
   options,
   value,
   onChange,
@@ -58,6 +58,10 @@ export function FilterChipRow<T extends string | null>({
     </ScrollView>
   );
 }
+
+export const FilterChipRow = memo(
+  FilterChipRowComponent,
+) as typeof FilterChipRowComponent;
 
 const styles = StyleSheet.create({
   row: {

@@ -1,5 +1,7 @@
 import { type ReactElement, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { AreaHeader } from '@/components';
 import type { Palette } from '@/theme';
 import type { RelationshipStatus, TimeOfDay } from '@/types';
 import { RELATIONSHIP_LABELS, RELATIONSHIP_OPTIONS } from '../types';
@@ -21,6 +23,8 @@ type HomeHeaderProps = {
   onAreaChange: (value: string | null) => void;
   onFavoritesOnlyChange: (value: boolean) => void;
   onReset: () => void;
+  unreadCount?: number;
+  onPressNotifications?: () => void;
   searchBar?: ReactNode;
   filterBar?: ReactNode;
 };
@@ -40,13 +44,35 @@ export function HomeHeader({
   onAreaChange,
   onFavoritesOnlyChange,
   onReset,
+  unreadCount = 0,
+  onPressNotifications,
   searchBar,
   filterBar,
 }: HomeHeaderProps): ReactElement {
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
-      <Text style={[styles.kicker, { color: palette.primary }]}>DateSpot</Text>
+      <View style={styles.topRow}>
+        <Text style={[styles.kicker, { color: palette.primary }]}>DateSpot</Text>
+        {onPressNotifications !== undefined ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="お知らせを開く"
+            onPress={onPressNotifications}
+            style={[styles.bell, { backgroundColor: palette.surface, borderColor: palette.border }]}
+          >
+            <Ionicons name="notifications-outline" size={18} color={palette.text} />
+            {unreadCount > 0 ? (
+              <View style={[styles.badge, { backgroundColor: palette.primary }]}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 9 ? '9+' : String(unreadCount)}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ) : null}
+      </View>
       <Text style={[styles.heading, { color: palette.text }]}>{heading}</Text>
+      <AreaHeader palette={palette} />
       <Text style={[styles.source, { color: palette.textSecondary }]}>
         データソース: {sourceLabel}
       </Text>
@@ -117,6 +143,35 @@ const styles = StyleSheet.create({
   container: {
     gap: 16,
     paddingBottom: 16,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bell: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
   kicker: {
     fontSize: 13,

@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/services/supabase';
 import { useSpotFilterStore } from '@/features/spots/store/spotFilterStore';
+import type { DeleteAccountReason } from '../../../../types/database';
 import { ensureAnonymousSession, ensureAppUser } from '../api/session';
 
 const GUEST_MODE_KEY = '@datespot/guest-mode';
@@ -13,6 +14,8 @@ export type AuthActionResult = {
   ok: boolean;
   message: string;
 };
+
+export type MockAuthMode = 'guest' | 'signed_in';
 
 type AuthState = {
   user: User | null;
@@ -25,6 +28,8 @@ type AuthState = {
   signIn: (email: string, password: string) => Promise<AuthActionResult>;
   signUp: (email: string, password: string) => Promise<AuthActionResult>;
   signOut: () => Promise<void>;
+  deleteAccount: (reason: DeleteAccountReason) => Promise<AuthActionResult>;
+  setMockAuth: (mode: MockAuthMode) => Promise<void>;
 };
 
 let authListenerAttached = false;
@@ -49,6 +54,37 @@ async function writeGuestMode(enabled: boolean): Promise<void> {
   } catch (error) {
     console.warn('[DateSpot] guestMode の保存に失敗', error);
   }
+}
+
+function createMockDevUser(): User {
+  const now = new Date().toISOString();
+  return {
+    id: '00000000-0000-4000-8000-000000000099',
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: 'dev@datespot.app',
+    email_confirmed_at: now,
+    phone: '',
+    confirmed_at: now,
+    last_sign_in_at: now,
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: { full_name: 'Dev User' },
+    identities: [],
+    created_at: now,
+    updated_at: now,
+    is_anonymous: false,
+  } as User;
+}
+
+function createMockDevSession(user: User): Session {
+  return {
+    access_token: 'dev-mock-access-token',
+    refresh_token: 'dev-mock-refresh-token',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer',
+    user,
+  } as Session;
 }
 
 function attachAuthListener(): void {
@@ -240,6 +276,81 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({
       user: null,
       session: null,
+      guestMode: false,
+      status: 'ready',
+      error: null,
+    });
+  },
+  deleteAccount: async (reason) => {
+    const client = getSupabaseClient();
+    const userId = get().user?.id ?? null;
+    const remoteUserId =
+      userId !== null &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        userId,
+      )
+        ? userId
+        : null;
+
+    if (client !== null) {
+      try {
+        await client.from('account_deletions').insert({
+          user_id: remoteUserId,
+          reason,
+        });
+      } catch (error) {
+        console.warn('[DateSpot] 退会理由の保存に失敗', error);
+      }
+
+      if (remoteUserId !== null) {
+        try {
+          await client.from('users').delete().eq('id', remoteUserId);
+        } catch (error) {
+          console.warn('[DateSpot] ユーザー行の削除に失敗', error);
+        }
+      }
+
+      const { error: signOutError } = await client.auth.signOut();
+      if (signOutError !== null) {
+        console.warn('[DateSpot] 退会後のサインアウトに失敗', signOutError.message);
+      }
+    }
+
+    await writeGuestMode(false);
+    set({
+      user: null,
+      session: null,
+      guestMode: false,
+      status: 'ready',
+      error: null,
+    });
+
+    return {
+      ok: true,
+      message:
+        client === null
+          ? 'この端末のセッションを終了し、ログイン画面に戻ります。'
+          : 'アカウントを削除し、セッションを終了しました。',
+    };
+  },
+  setMockAuth: async (mode) => {
+    if (mode === 'guest') {
+      await writeGuestMode(true);
+      set({
+        user: null,
+        session: null,
+        guestMode: true,
+        status: 'ready',
+        error: null,
+      });
+      return;
+    }
+
+    const user = createMockDevUser();
+    await writeGuestMode(false);
+    set({
+      user,
+      session: createMockDevSession(user),
       guestMode: false,
       status: 'ready',
       error: null,

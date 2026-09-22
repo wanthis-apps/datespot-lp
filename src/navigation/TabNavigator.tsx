@@ -1,11 +1,26 @@
 import { type ComponentProps, type ReactElement } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useAppTheme, useI18n } from '@/context';
 import { MapScreen } from '@/features/map';
-import { HomeScreen, useSpotFilterStore } from '@/features/spots';
-import { CouponsScreen, FavoritesScreen, ProfileScreen } from '@/screens';
-import { palettes } from '@/theme';
+import { HomeScreen } from '@/features/spots';
+import {
+  CouponsScreen,
+  FavoritesScreen,
+  PlansScreen,
+  ProfileScreen,
+} from '@/screens';
+import type { AppTranslationKey } from '@/i18n';
 import type { TabParamList } from './types';
+
+const TAB_LABEL_KEYS: Record<keyof TabParamList, AppTranslationKey> = {
+  Home: 'tabs.Home',
+  Map: 'tabs.Map',
+  Coupons: 'tabs.Coupons',
+  Favorites: 'tabs.Favorites',
+  Plans: 'tabs.Plans',
+  MyPage: 'tabs.MyPage',
+};
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -21,20 +36,13 @@ const TAB_ICONS: Record<keyof TabParamList, TabIconSet> = {
   Map: { focused: 'map', unfocused: 'map-outline' },
   Coupons: { focused: 'ticket', unfocused: 'ticket-outline' },
   Favorites: { focused: 'heart', unfocused: 'heart-outline' },
+  Plans: { focused: 'calendar', unfocused: 'calendar-outline' },
   MyPage: { focused: 'person', unfocused: 'person-outline' },
 };
 
-const TAB_LABELS: Record<keyof TabParamList, string> = {
-  Home: 'ホーム',
-  Map: 'マップ',
-  Coupons: 'クーポン',
-  Favorites: 'お気に入り',
-  MyPage: 'マイページ',
-};
-
 export function TabNavigator(): ReactElement {
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
-  const palette = palettes[timeOfDay];
+  const { palette } = useAppTheme();
+  const { t } = useI18n();
 
   return (
     <Tab.Navigator
@@ -49,7 +57,7 @@ export function TabNavigator(): ReactElement {
           backgroundColor: palette.surface,
           borderTopColor: palette.border,
         },
-        tabBarLabel: TAB_LABELS[route.name],
+        tabBarLabel: t(TAB_LABEL_KEYS[route.name]),
         tabBarIcon: ({ color, size, focused }) => {
           const iconSet = TAB_ICONS[route.name];
           const iconName = focused ? iconSet.focused : iconSet.unfocused;
@@ -75,6 +83,11 @@ export function TabNavigator(): ReactElement {
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Plans"
+        component={PlansScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen

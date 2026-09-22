@@ -2,9 +2,9 @@ import { useCallback, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCouponUsage } from '@/features/coupons';
-import { useFavorites, useSpotCatalogStore, useSpotFilterStore } from '@/features/spots';
-import { palettes, type Palette } from '@/theme';
-import type { TimeOfDay } from '@/types';
+import { useAppTheme } from '@/context';
+import { useFavorites, useSpotCatalogStore } from '@/features/spots';
+import type { Palette } from '@/theme';
 
 export type ProfileUser = {
   id: string;
@@ -15,15 +15,13 @@ export type ProfileUser = {
 
 export type UseProfileScreenResult = {
   profile: ProfileUser;
-  timeOfDay: TimeOfDay;
+  isDark: boolean;
   palette: Palette;
   favoriteCount: number;
   usedCouponCount: number;
-  notificationsEnabled: boolean;
   isSyncing: boolean;
   isGuest: boolean;
   isEmailUser: boolean;
-  setNotificationsEnabled: (enabled: boolean) => void;
   updateDisplayName: (name: string) => void;
   resync: () => Promise<void>;
   logout: () => Promise<void>;
@@ -71,8 +69,7 @@ export function useProfileScreen(): UseProfileScreenResult {
   const { favoriteSpotIds } = useFavorites();
   const { history, reload: reloadUsage } = useCouponUsage();
   const loadSpots = useSpotCatalogStore((state) => state.loadSpots);
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { isDark, palette } = useAppTheme();
   const [isSyncing, setIsSyncing] = useState(false);
   const [editedName, setEditedName] = useState<string | null>(null);
 
@@ -114,15 +111,13 @@ export function useProfileScreen(): UseProfileScreenResult {
 
   return {
     profile,
-    timeOfDay,
-    palette: palettes[timeOfDay],
+    isDark,
+    palette,
     favoriteCount: favoriteSpotIds.length,
     usedCouponCount: history.length,
-    notificationsEnabled,
     isSyncing,
     isGuest,
     isEmailUser,
-    setNotificationsEnabled,
     updateDisplayName,
     resync,
     logout,

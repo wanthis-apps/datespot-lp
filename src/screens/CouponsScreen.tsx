@@ -3,10 +3,9 @@ import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CouponCardSkeleton, ErrorState } from '@/components';
+import { useAppTheme } from '@/context';
 import { useCouponList } from '../../hooks/useCouponList';
-import { useSpotFilterStore } from '@/features/spots';
 import type { TabScreenProps } from '@/navigation/types';
-import { palettes } from '@/theme';
 import type { Coupon } from '../../types/database';
 import { CouponListCard } from './components/CouponListCard';
 import { EmptyState } from './components/EmptyState';
@@ -15,8 +14,7 @@ type CouponsScreenProps = TabScreenProps<'Coupons'>;
 
 export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
-  const palette = palettes[timeOfDay];
+  const { isDark, palette } = useAppTheme();
   const { coupons, loading, error, refetch } = useCouponList();
 
   const handleUseCoupon = (coupon: Coupon): void => {
@@ -54,7 +52,7 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
   if (loading && coupons.length === 0) {
     return (
       <View style={screenStyle}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.header}>
             <Text style={[styles.kicker, { color: palette.primary }]}>
@@ -77,7 +75,7 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
   if (error !== null && coupons.length === 0) {
     return (
       <View style={screenStyle}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <ErrorState
           palette={palette}
           message={error}
@@ -91,7 +89,7 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
 
   return (
     <View style={screenStyle}>
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <FlatList
         data={coupons}
         keyExtractor={(item) => item.id}

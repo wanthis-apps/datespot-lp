@@ -6,6 +6,7 @@ export type UseFavoritesResult = {
   isLoading: boolean;
   isFavorite: (spotId: string) => boolean;
   toggleFavorite: (spotId: string) => Promise<void>;
+  removeFavorites: (spotIds: string[]) => Promise<void>;
 };
 
 export function useFavorites(): UseFavoritesResult {
@@ -13,6 +14,7 @@ export function useFavorites(): UseFavoritesResult {
   const status = useFavoriteStore((state) => state.status);
   const hydrate = useFavoriteStore((state) => state.hydrate);
   const toggleFavorite = useFavoriteStore((state) => state.toggleFavorite);
+  const removeFavorites = useFavoriteStore((state) => state.removeFavorites);
   const isFavorite = useFavoriteStore((state) => state.isFavorite);
 
   useEffect(() => {
@@ -28,10 +30,18 @@ export function useFavorites(): UseFavoritesResult {
     [toggleFavorite],
   );
 
+  const remove = useCallback(
+    async (spotIds: string[]) => {
+      await removeFavorites(spotIds);
+    },
+    [removeFavorites],
+  );
+
   return {
     favoriteSpotIds,
     isLoading: status === 'idle' || status === 'loading',
     isFavorite,
     toggleFavorite: toggle,
+    removeFavorites: remove,
   };
 }

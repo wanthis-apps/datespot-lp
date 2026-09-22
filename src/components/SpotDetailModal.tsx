@@ -20,12 +20,15 @@ import {
   formatReviewDate,
   formatValidUntil,
 } from '../../hooks/mapRecords';
+import { formatSpotTagLabel } from '../../hooks/spotTags';
 import { useReviews } from '../../hooks/useReviews';
 import { useFavorites } from '@/features/spots/hooks/useFavorites';
+import { shareSpot } from '@/utils/share';
 import type { Palette } from '@/theme';
 import type { Coupon, Review, Spot } from '../../types/database';
 import { Button } from './Button';
 import { RemoteImage } from './RemoteImage';
+import { ReservationModal } from './ReservationModal';
 
 export type SpotDetailModalProps = {
   visible: boolean;
@@ -51,8 +54,11 @@ export function SpotDetailModal({
     submitting,
     error: reviewsError,
     submitReview,
+    helpfulReviewIds,
+    toggleHelpful,
   } = useReviews(spot?.id ?? null);
   const [showCoupons, setShowCoupons] = useState(false);
+  const [reservationVisible, setReservationVisible] = useState(false);
   const [draftRating, setDraftRating] = useState(0);
   const [draftComment, setDraftComment] = useState('');
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
@@ -78,6 +84,18 @@ export function SpotDetailModal({
 
   const handleShowCoupons = (): void => {
     setShowCoupons(true);
+  };
+
+  const handleShareSpot = (): void => {
+    if (spot === null) {
+      return;
+    }
+
+    void shareSpot(spot).then((result) => {
+      if (!result.ok) {
+        Alert.alert('共有できませんでした', result.message);
+      }
+    });
   };
 
   const handleUseCoupon = (coupon: Coupon): void => {
@@ -109,6 +127,7 @@ export function SpotDetailModal({
 
   const handleClose = (): void => {
     setShowCoupons(false);
+    setReservationVisible(false);
     resetReviewForm();
     onClose();
   };
@@ -126,6 +145,7 @@ export function SpotDetailModal({
   };
 
   return (
+    <>
     <Modal
       visible={visible}
       transparent
@@ -186,6 +206,16 @@ export function SpotDetailModal({
                     {formatPriceRange(spot.price_range)}
                   </Text>
                 </View>
+                {(spot.tags ?? []).map((tag) => (
+                  <View
+                    key={tag}
+                    style={[styles.tag, { backgroundColor: palette.background }]}
+                  >
+                    <Text style={[styles.tagText, { color: palette.textSecondary }]}>
+                      {formatSpotTagLabel(tag)}
+                    </Text>
+                  </View>
+                ))}
               </View>
               <Text style={[styles.name, { color: palette.text }]}>
                 {spot.name}
@@ -210,10 +240,21 @@ export function SpotDetailModal({
 
               <View style={styles.actions}>
                 <Button
+                  label="予約・空席確認"
+                  onPress={() => setReservationVisible(true)}
+                  palette={palette}
+                />
+                <Button
                   label={favorited ? 'お気に入り解除' : 'お気に入り追加'}
                   onPress={handleToggleFavorite}
                   palette={palette}
                   variant={favorited ? 'ghost' : 'primary'}
+                />
+                <Button
+                  label="このスポットをシェア"
+                  onPress={handleShareSpot}
+                  palette={palette}
+                  variant="ghost"
                 />
                 <Button
                   label="関連クーポンを見る"
@@ -269,6 +310,8 @@ export function SpotDetailModal({
                       key={review.id}
                       review={review}
                       palette={palette}
+                      helpful={helpfulReviewIds.includes(review.id)}
+                      onToggleHelpful={toggleHelpful}
                     />
                   ))
                 )}
@@ -392,6 +435,13 @@ export function SpotDetailModal({
         </View>
       </KeyboardAvoidingView>
     </Modal>
+    <ReservationModal
+      visible={reservationVisible}
+      spot={spot}
+      palette={palette}
+      onClose={() => setReservationVisible(false)}
+    />
+    </>
   );
 }
 
@@ -439,9 +489,13 @@ function StarPicker({
 function ReviewListItem({
   review,
   palette,
+  helpful,
+  onToggleHelpful,
 }: {
   review: Review;
   palette: Palette;
+  helpful: boolean;
+  onToggleHelpful: (reviewId: string) => void;
 }): ReactElement {
   return (
     <View
@@ -465,6 +519,28 @@ function ReviewListItem({
       <Text style={[styles.reviewComment, { color: palette.textSecondary }]}>
         {review.comment}
       </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ selected: helpful }}
+        accessibilityLabel={`参考になった ${review.helpful_count}件`}
+        onPress={() => onToggleHelpful(review.id)}
+        style={[
+          styles.helpfulButton,
+          {
+            backgroundColor: helpful ? palette.primaryMuted : palette.surface,
+            borderColor: helpful ? palette.primary : palette.border,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.helpfulLabel,
+            { color: helpful ? palette.primary : palette.textSecondary },
+          ]}
+        >
+          {`👍 参考になった (${review.helpful_count})`}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -624,6 +700,17 @@ const styles = StyleSheet.create({
   reviewComment: {
     fontSize: 14,
     lineHeight: 22,
+  },
+  helpfulButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  helpfulLabel: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   reviewForm: {
     borderWidth: 1,

@@ -1,5 +1,12 @@
 export { AuthScreen } from './AuthScreen';
+export { ContactScreen } from './ContactScreen';
 export { CouponHistoryScreen } from './CouponHistoryScreen';
 export { CouponsScreen } from './CouponsScreen';
+export { FaqScreen } from './FaqScreen';
+export { LegalScreen } from './LegalScreen';
 export { FavoritesScreen } from './FavoritesScreen';
+export { NotificationsScreen } from './NotificationsScreen';
+export { OnboardingScreen } from './OnboardingScreen';
+export { NotificationSettingsScreen } from './NotificationSettingsScreen';
+export { PlansScreen } from './PlansScreen';
 export { ProfileScreen } from './ProfileScreen';

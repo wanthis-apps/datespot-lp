@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components';
 import type { Palette } from '@/theme';
@@ -14,7 +14,7 @@ type CouponCardProps = {
   onUse: () => void;
 };
 
-export function CouponCard({
+function CouponCardComponent({
   coupon,
   palette,
   used,
@@ -62,6 +62,8 @@ export function CouponCard({
     </View>
   );
 }
+
+export const CouponCard = memo(CouponCardComponent);
 
 const styles = StyleSheet.create({
   card: {

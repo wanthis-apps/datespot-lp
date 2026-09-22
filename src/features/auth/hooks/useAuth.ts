@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+import type { DeleteAccountReason } from '../../../../types/database';
 import { useAuthStore, type AuthActionResult } from '../store/authStore';
 
 export type UseAuthResult = {
@@ -17,6 +18,7 @@ export type UseAuthResult = {
   signIn: (email: string, password: string) => Promise<AuthActionResult>;
   signUp: (email: string, password: string) => Promise<AuthActionResult>;
   signOut: () => Promise<void>;
+  deleteAccount: (reason: DeleteAccountReason) => Promise<AuthActionResult>;
 };
 
 function isEmailUser(user: User | null): boolean {
@@ -34,6 +36,7 @@ export function useAuth(): UseAuthResult {
   const signIn = useAuthStore((state) => state.signIn);
   const signUp = useAuthStore((state) => state.signUp);
   const signOut = useAuthStore((state) => state.signOut);
+  const deleteAccount = useAuthStore((state) => state.deleteAccount);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -63,5 +66,6 @@ export function useAuth(): UseAuthResult {
     signIn,
     signUp,
     signOut,
+    deleteAccount,
   };
 }

@@ -25,7 +25,7 @@ export function MyPageScreen({ navigation }: MyPageScreenProps): ReactElement {
     role,
     isPremium,
     isPlanVisible,
-    timeOfDay,
+    isDark,
     palette,
     ctaLabel,
     favoriteSpots,
@@ -70,7 +70,7 @@ export function MyPageScreen({ navigation }: MyPageScreenProps): ReactElement {
         },
       ]}
     >
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView
         contentContainerStyle={[
           styles.content,

@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -27,7 +27,7 @@ const SORT_CHIPS: ReadonlyArray<{ value: SpotSortBy; label: string }> = [
   { value: 'name', label: '名前順' },
 ];
 
-export function SearchBar({
+function SearchBarComponent({
   searchQuery,
   setSearchQuery,
   sortBy,
@@ -109,6 +109,8 @@ export function SearchBar({
     </View>
   );
 }
+
+export const SearchBar = memo(SearchBarComponent);
 
 const styles = StyleSheet.create({
   container: {

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { showToast } from '@/context/toastStore';
 import { useSpotFilterStore } from '@/features/spots/store/spotFilterStore';
 import type { UserCouponHistory } from '@/types';
 import {
@@ -20,6 +21,7 @@ type CouponUsageState = {
   hydrate: () => Promise<void>;
   redeem: (couponId: string) => Promise<{ ok: boolean; message: string }>;
   isUsed: (couponId: string) => boolean;
+  resetLocal: () => Promise<void>;
 };
 
 async function readLocalUsedIds(): Promise<string[]> {
@@ -117,6 +119,7 @@ export const useCouponUsageStore = create<CouponUsageState>((set, get) => ({
           redeemingCouponId: null,
           error: result.message,
         });
+        showToast({ message: result.message, type: 'error' });
         return { ok: false, message: result.message };
       }
 
@@ -133,6 +136,7 @@ export const useCouponUsageStore = create<CouponUsageState>((set, get) => ({
         status: 'ready',
       });
 
+      showToast({ message: 'クーポンを利用しました', type: 'success' });
       return { ok: true, message: result.message };
     } catch (error) {
       const message =
@@ -142,5 +146,15 @@ export const useCouponUsageStore = create<CouponUsageState>((set, get) => ({
       set({ redeemingCouponId: null, error: message });
       return { ok: false, message };
     }
+  },
+  resetLocal: async () => {
+    await writeLocalUsedIds([]);
+    set({
+      usedCouponIds: [],
+      history: [],
+      status: 'ready',
+      error: null,
+      redeemingCouponId: null,
+    });
   },
 }));

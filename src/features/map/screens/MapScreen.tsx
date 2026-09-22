@@ -2,6 +2,8 @@ import { type ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AreaHeader } from '@/components';
+import { useAppTheme } from '@/context';
 import type { TabScreenProps } from '@/navigation/types';
 import { MapFilterBadge } from '../components/MapFilterBadge';
 import { SpotMap } from '../components/SpotMap';
@@ -12,6 +14,7 @@ type MapScreenProps = TabScreenProps<'Map'>;
 
 export function MapScreen({ navigation }: MapScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
+  const { isDark } = useAppTheme();
   const {
     timeOfDay,
     relationship,
@@ -30,7 +33,7 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
 
   return (
     <View style={[styles.screen, { backgroundColor: palette.background }]}>
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.mapHost}>
         <SpotMap
           spots={spots}
@@ -48,6 +51,7 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
         />
       </View>
       <View style={[styles.badgeWrap, { top: insets.top + 12 }]}>
+        <AreaHeader palette={palette} />
         <MapFilterBadge
           timeOfDay={timeOfDay}
           relationship={relationship}
@@ -92,6 +96,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 20,
     right: 20,
+    gap: 10,
   },
   previewWrap: {
     position: 'absolute',

@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RemoteImage } from '@/components';
@@ -12,26 +12,53 @@ import type { Spot } from '../../../types/database';
 type FavoriteSpotCardProps = {
   spot: Spot;
   palette: Palette;
+  selectionMode?: boolean;
+  selected?: boolean;
   onPress: () => void;
   onRemoveFavorite: () => void;
 };
 
-export function FavoriteSpotCard({
+function FavoriteSpotCardComponent({
   spot,
   palette,
+  selectionMode = false,
+  selected = false,
   onPress,
   onRemoveFavorite,
 }: FavoriteSpotCardProps): ReactElement {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${spot.name}の詳細を開く`}
+      accessibilityLabel={
+        selectionMode
+          ? `${spot.name}を${selected ? '選択解除' : '選択'}`
+          : `${spot.name}の詳細を開く`
+      }
+      accessibilityState={selectionMode ? { selected } : undefined}
       onPress={onPress}
       style={[
         styles.card,
-        { backgroundColor: palette.surface, borderColor: palette.border },
+        {
+          backgroundColor: palette.surface,
+          borderColor: selected ? palette.primary : palette.border,
+        },
       ]}
     >
+      {selectionMode ? (
+        <View
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: selected ? palette.primary : palette.background,
+              borderColor: selected ? palette.primary : palette.border,
+            },
+          ]}
+        >
+          {selected ? (
+            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+          ) : null}
+        </View>
+      ) : null}
       <RemoteImage
         uri={spot.image_url}
         style={styles.image}
@@ -64,21 +91,25 @@ export function FavoriteSpotCard({
           </Text>
         ) : null}
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="お気に入りから外す"
-        hitSlop={8}
-        onPress={(event) => {
-          event.stopPropagation();
-          onRemoveFavorite();
-        }}
-        style={[styles.heart, { backgroundColor: palette.primaryMuted }]}
-      >
-        <Ionicons name="heart" size={18} color={palette.primary} />
-      </Pressable>
+      {selectionMode ? null : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="お気に入りから外す"
+          hitSlop={8}
+          onPress={(event) => {
+            event.stopPropagation();
+            onRemoveFavorite();
+          }}
+          style={[styles.heart, { backgroundColor: palette.primaryMuted }]}
+        >
+          <Ionicons name="heart" size={18} color={palette.primary} />
+        </Pressable>
+      )}
     </Pressable>
   );
 }
+
+export const FavoriteSpotCard = memo(FavoriteSpotCardComponent);
 
 const styles = StyleSheet.create({
   card: {
@@ -93,6 +124,14 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   image: {
     width: 88,

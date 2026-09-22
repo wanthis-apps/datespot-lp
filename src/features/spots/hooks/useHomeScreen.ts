@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
-import { palettes, type Palette } from '@/theme';
+import { useArea, useAppTheme } from '@/context';
+import type { Palette } from '@/theme';
 import type { RelationshipStatus, Spot, SpotCategory, TimeOfDay } from '@/types';
+import { haversineKm } from '../../../../hooks/geo';
 import { useFavoriteStore } from '../store/favoriteStore';
 import { useSpotFilterStore } from '../store/spotFilterStore';
 import { collectAreas, filterSpots } from '../utils/filterSpots';
@@ -34,6 +36,8 @@ export type HomeScreenViewModel = {
 };
 
 export function useHomeScreen(): HomeScreenViewModel {
+  const { palette } = useAppTheme();
+  const { area: referenceArea } = useArea();
   const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
   const relationship = useSpotFilterStore((state) => state.relationship);
   const area = useSpotFilterStore((state) => state.area);
@@ -59,28 +63,44 @@ export function useHomeScreen(): HomeScreenViewModel {
 
   const areas = useMemo(() => collectAreas(allSpots), [allSpots]);
 
-  const spots = useMemo(
-    () =>
-      filterSpots(allSpots, {
-        timeOfDay,
-        relationship,
-        area,
-        category,
-        query,
-        favoritesOnly,
-        favoriteSpotIds,
-      }),
-    [
-      allSpots,
+  const spots = useMemo(() => {
+    const origin = {
+      latitude: referenceArea.latitude,
+      longitude: referenceArea.longitude,
+    };
+
+    return filterSpots(allSpots, {
+      timeOfDay,
+      relationship,
       area,
       category,
-      favoriteSpotIds,
-      favoritesOnly,
       query,
-      relationship,
-      timeOfDay,
-    ],
-  );
+      favoritesOnly,
+      favoriteSpotIds,
+    }).slice().sort((left, right) => {
+      return (
+        haversineKm(origin, {
+          latitude: left.location.lat,
+          longitude: left.location.lng,
+        }) -
+        haversineKm(origin, {
+          latitude: right.location.lat,
+          longitude: right.location.lng,
+        })
+      );
+    });
+  }, [
+    allSpots,
+    area,
+    category,
+    favoriteSpotIds,
+    favoritesOnly,
+    query,
+    referenceArea.latitude,
+    referenceArea.longitude,
+    relationship,
+    timeOfDay,
+  ]);
 
   const sourceLabel =
     source === null
@@ -121,7 +141,7 @@ export function useHomeScreen(): HomeScreenViewModel {
     favoritesOnly,
     favoriteSpotIds,
     spots,
-    palette: palettes[timeOfDay],
+    palette,
     isLoading,
     error,
     sourceLabel,

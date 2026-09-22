@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Palette } from '@/theme';
 import type { RelationshipStatus, SpotCategory, TimeOfDay } from '@/types';
@@ -18,7 +18,7 @@ type MapFilterBadgeProps = {
   palette: Palette;
 };
 
-export function MapFilterBadge({
+function MapFilterBadgeComponent({
   timeOfDay,
   relationship,
   area,
@@ -51,6 +51,8 @@ export function MapFilterBadge({
     </View>
   );
 }
+
+export const MapFilterBadge = memo(MapFilterBadgeComponent);
 
 const styles = StyleSheet.create({
   badge: {

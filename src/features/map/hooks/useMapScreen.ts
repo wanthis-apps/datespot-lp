@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { palettes, type Palette } from '@/theme';
+import { useArea, useAppTheme } from '@/context';
+import type { Palette } from '@/theme';
 import type { RelationshipStatus, Spot, SpotCategory, TimeOfDay } from '@/types';
 import { useFavoriteStore } from '@/features/spots/store/favoriteStore';
 import { useSpotCatalogStore } from '@/features/spots/store/spotCatalogStore';
 import { useSpotFilterStore } from '@/features/spots/store/spotFilterStore';
 import { filterSpots } from '@/features/spots/utils/filterSpots';
 import type { MapRegion } from '../types';
-import { computeMapRegion } from '../utils/mapCoordinates';
 
 export type MapScreenViewModel = {
   timeOfDay: TimeOfDay;
@@ -25,6 +25,8 @@ export type MapScreenViewModel = {
 };
 
 export function useMapScreen(): MapScreenViewModel {
+  const { palette } = useAppTheme();
+  const { area: referenceArea } = useArea();
   const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
   const relationship = useSpotFilterStore((state) => state.relationship);
   const area = useSpotFilterStore((state) => state.area);
@@ -62,7 +64,15 @@ export function useMapScreen(): MapScreenViewModel {
   const selectedSpot =
     spots.find((spot) => spot.id === selectedSpotId) ?? null;
 
-  const initialRegion = useMemo(() => computeMapRegion(spots), [spots]);
+  const initialRegion = useMemo(
+    (): MapRegion => ({
+      latitude: referenceArea.latitude,
+      longitude: referenceArea.longitude,
+      latitudeDelta: 0.06,
+      longitudeDelta: 0.06,
+    }),
+    [referenceArea.latitude, referenceArea.longitude],
+  );
 
   useEffect(() => {
     if (
@@ -99,7 +109,7 @@ export function useMapScreen(): MapScreenViewModel {
     favoritesOnly,
     spots,
     selectedSpot,
-    palette: palettes[timeOfDay],
+    palette,
     initialRegion,
     selectSpot,
     clearSelectedSpot,

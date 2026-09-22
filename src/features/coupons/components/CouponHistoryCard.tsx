@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Palette } from '@/theme';
@@ -10,7 +10,7 @@ type CouponHistoryCardProps = {
   usedAt: string;
 };
 
-export function CouponHistoryCard({
+function CouponHistoryCardComponent({
   palette,
   spotName,
   description,
@@ -38,6 +38,8 @@ export function CouponHistoryCard({
     </View>
   );
 }
+
+export const CouponHistoryCard = memo(CouponHistoryCardComponent);
 
 const styles = StyleSheet.create({
   card: {

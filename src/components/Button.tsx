@@ -2,7 +2,7 @@ import { type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import type { Palette } from '@/theme';
 
-type ButtonVariant = 'primary' | 'ghost';
+type ButtonVariant = 'primary' | 'ghost' | 'danger';
 
 type ButtonProps = {
   label: string;
@@ -20,6 +20,7 @@ export function Button({
   variant = 'primary',
 }: ButtonProps): ReactElement {
   const isPrimary = variant === 'primary';
+  const isDanger = variant === 'danger';
 
   return (
     <Pressable
@@ -29,8 +30,16 @@ export function Button({
       style={[
         styles.button,
         {
-          backgroundColor: isPrimary ? palette.primary : 'transparent',
-          borderColor: isPrimary ? palette.primary : palette.border,
+          backgroundColor: isDanger
+            ? palette.danger
+            : isPrimary
+              ? palette.primary
+              : 'transparent',
+          borderColor: isDanger
+            ? palette.danger
+            : isPrimary
+              ? palette.primary
+              : palette.border,
           opacity: disabled ? 0.5 : 1,
         },
       ]}
@@ -38,7 +47,7 @@ export function Button({
       <Text
         style={[
           styles.label,
-          { color: isPrimary ? '#FFFFFF' : palette.text },
+          { color: isPrimary || isDanger ? '#FFFFFF' : palette.text },
         ]}
       >
         {label}

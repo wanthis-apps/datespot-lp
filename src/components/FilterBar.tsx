@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Palette } from '@/theme';
 import type { SpotCategory } from '../../types/database';
@@ -8,6 +8,8 @@ export type FilterBarProps = {
   setSelectedCategory: (category: SpotCategory | null) => void;
   selectedPriceRange?: number | null;
   setSelectedPriceRange?: (priceRange: number | null) => void;
+  selectedTagCount?: number;
+  onPressTagFilter?: () => void;
   palette: Palette;
 };
 
@@ -96,11 +98,13 @@ function ChipRow<T extends string | number | null>({
   );
 }
 
-export function FilterBar({
+function FilterBarComponent({
   selectedCategory,
   setSelectedCategory,
   selectedPriceRange = null,
   setSelectedPriceRange,
+  selectedTagCount = 0,
+  onPressTagFilter,
   palette,
 }: FilterBarProps): ReactElement {
   return (
@@ -121,9 +125,42 @@ export function FilterBar({
           palette={palette}
         />
       ) : null}
+      {onPressTagFilter !== undefined ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="こだわり条件を開く"
+          onPress={onPressTagFilter}
+          style={[
+            styles.tagTrigger,
+            {
+              backgroundColor: palette.surface,
+              borderColor:
+                selectedTagCount > 0 ? palette.primary : palette.border,
+            },
+          ]}
+        >
+          <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+            こだわり条件
+          </Text>
+          <Text
+            style={[
+              styles.tagTriggerText,
+              {
+                color: selectedTagCount > 0 ? palette.primary : palette.text,
+              },
+            ]}
+          >
+            {selectedTagCount > 0
+              ? `${selectedTagCount}件選択中`
+              : '雨の日OK・個室など'}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
+
+export const FilterBar = memo(FilterBarComponent);
 
 const styles = StyleSheet.create({
   container: {
@@ -149,5 +186,16 @@ const styles = StyleSheet.create({
   chipLabel: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  tagTrigger: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  tagTriggerText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

@@ -51,6 +51,7 @@ export type Database = {
           image_url: string;
           area: string;
           description: string;
+          tags: string[];
           created_at: string;
         };
         Insert: {
@@ -65,6 +66,7 @@ export type Database = {
           image_url: string;
           area: string;
           description: string;
+          tags?: string[];
           created_at?: string;
         };
         Update: {
@@ -79,6 +81,7 @@ export type Database = {
           image_url?: string;
           area?: string;
           description?: string;
+          tags?: string[];
           created_at?: string;
         };
         Relationships: [];
@@ -112,6 +115,72 @@ export type Database = {
           },
         ];
       };
+      plans: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          is_public: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          is_public?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          is_public?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      plan_spots: {
+        Row: {
+          id: string;
+          plan_id: string;
+          spot_id: string;
+          order_index: number;
+          visit_time: string | null;
+        };
+        Insert: {
+          id?: string;
+          plan_id: string;
+          spot_id: string;
+          order_index: number;
+          visit_time?: string | null;
+        };
+        Update: {
+          id?: string;
+          plan_id?: string;
+          spot_id?: string;
+          order_index?: number;
+          visit_time?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'plan_spots_plan_id_fkey';
+            columns: ['plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'plans';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'plan_spots_spot_id_fkey';
+            columns: ['spot_id'];
+            isOneToOne: false;
+            referencedRelation: 'spots';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       reviews: {
         Row: {
           id: string;
@@ -120,6 +189,7 @@ export type Database = {
           user_name: string;
           rating: number;
           comment: string;
+          helpful_count: number;
           created_at: string;
         };
         Insert: {
@@ -129,6 +199,7 @@ export type Database = {
           user_name: string;
           rating: number;
           comment: string;
+          helpful_count?: number;
           created_at?: string;
         };
         Update: {
@@ -138,6 +209,7 @@ export type Database = {
           user_name?: string;
           rating?: number;
           comment?: string;
+          helpful_count?: number;
           created_at?: string;
         };
         Relationships: [
@@ -149,6 +221,84 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      notification_settings: {
+        Row: {
+          user_id: string;
+          coupon_expiry: boolean;
+          favorite_reviews: boolean;
+          plan_updates: boolean;
+          promotions: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          coupon_expiry?: boolean;
+          favorite_reviews?: boolean;
+          plan_updates?: boolean;
+          promotions?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          coupon_expiry?: boolean;
+          favorite_reviews?: boolean;
+          plan_updates?: boolean;
+          promotions?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      account_deletions: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          reason: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          reason: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          reason?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      feedback: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          category: string;
+          subject: string;
+          body: string;
+          email: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          category: string;
+          subject: string;
+          body: string;
+          email: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          category?: string;
+          subject?: string;
+          body?: string;
+          email?: string;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       user_coupons_history: {
         Row: {
@@ -236,6 +386,11 @@ export type CouponRow = Tables<'coupons'>;
 export type UserRow = Tables<'users'>;
 export type UserCouponHistoryRow = Tables<'user_coupons_history'>;
 export type ReviewRow = Tables<'reviews'>;
+export type PlanRow = Tables<'plans'>;
+export type PlanSpotRow = Tables<'plan_spots'>;
+export type FeedbackRow = Tables<'feedback'>;
+export type NotificationSettingsRow = Tables<'notification_settings'>;
+export type AccountDeletionRow = Tables<'account_deletions'>;
 
 export type SpotRowWithCoupons = SpotRow & {
   coupons: CouponRow[];

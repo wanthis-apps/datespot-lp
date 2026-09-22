@@ -3,6 +3,11 @@ import { useFavorites } from '@/features/spots/hooks/useFavorites';
 import { useSpotCatalogStore } from '@/features/spots/store/spotCatalogStore';
 import { getSupabaseClient } from '@/services/supabase';
 import type { Spot } from '../types/database';
+import {
+  notifyOfflineCache,
+  readCachedSpots,
+  writeCachedSpots,
+} from './dataCache';
 import { mapCatalogSpot, mapSpotRow, toErrorMessage } from './mapRecords';
 
 export type UseFavoriteSpotsResult = {
@@ -10,6 +15,7 @@ export type UseFavoriteSpotsResult = {
   loading: boolean;
   error: string | null;
   toggleFavorite: (spotId: string) => Promise<void>;
+  removeFavorites: (spotIds: string[]) => Promise<void>;
   refetch: () => Promise<void>;
 };
 
@@ -19,6 +25,7 @@ export function useFavoriteSpots(): UseFavoriteSpotsResult {
     favoriteSpotIds,
     isLoading: favoritesLoading,
     toggleFavorite,
+    removeFavorites,
   } = useFavorites();
   const [remoteSpots, setRemoteSpots] = useState<Spot[]>([]);
   const [loadingRemote, setLoadingRemote] = useState(true);
@@ -28,9 +35,22 @@ export function useFavoriteSpots(): UseFavoriteSpotsResult {
     setLoadingRemote(true);
     setError(null);
 
+    const applyCache = async (reason: string | null): Promise<void> => {
+      const cached = await readCachedSpots();
+      if (cached.length > 0) {
+        setRemoteSpots(cached);
+        setError(null);
+        notifyOfflineCache();
+        return;
+      }
+
+      setRemoteSpots([]);
+      setError(reason);
+    };
+
     const client = getSupabaseClient();
     if (client === null) {
-      setRemoteSpots([]);
+      await applyCache(null);
       setLoadingRemote(false);
       return;
     }
@@ -38,21 +58,23 @@ export function useFavoriteSpots(): UseFavoriteSpotsResult {
     try {
       const { data, error: queryError } = await client.from('spots').select('*');
       if (queryError !== null) {
-        setRemoteSpots([]);
-        setError(`お気に入りスポットの取得に失敗しました: ${queryError.message}`);
+        await applyCache(
+          `お気に入りスポットの取得に失敗しました: ${queryError.message}`,
+        );
         return;
       }
 
       const rows = Array.isArray(data) ? data : [];
-      setRemoteSpots(
-        rows.flatMap((row) => {
-          const spot = mapSpotRow(row);
-          return spot === null ? [] : [spot];
-        }),
-      );
+      const mapped = rows.flatMap((row) => {
+        const spot = mapSpotRow(row);
+        return spot === null ? [] : [spot];
+      });
+      setRemoteSpots(mapped);
+      if (mapped.length > 0) {
+        await writeCachedSpots(mapped);
+      }
     } catch (caught) {
-      setRemoteSpots([]);
-      setError(
+      await applyCache(
         `お気に入りスポットの取得に失敗しました: ${toErrorMessage(caught)}`,
       );
     } finally {
@@ -90,6 +112,7 @@ export function useFavoriteSpots(): UseFavoriteSpotsResult {
     loading: favoritesLoading || loadingRemote,
     error: spots.length === 0 ? error : null,
     toggleFavorite,
+    removeFavorites,
     refetch,
   };
 }

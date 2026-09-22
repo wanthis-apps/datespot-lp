@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useCoupons, useCouponUsage } from '@/features/coupons';
-import { useFavorites, useSpotCatalogStore, useSpotFilterStore } from '@/features/spots';
+import { useAppTheme } from '@/context';
+import { useFavorites, useSpotCatalogStore } from '@/features/spots';
 import { PREMIUM_PLAN } from '@/features/subscription/constants';
 import { useMembershipStore } from '@/features/subscription/store/membershipStore';
-import { palettes, type Palette } from '@/theme';
+import type { Palette } from '@/theme';
 import type { Coupon, Spot, TimeOfDay, UserCouponHistory, UserRole } from '@/types';
 
 export type CouponListItem = {
@@ -25,6 +26,7 @@ export type MyPageViewModel = {
   role: UserRole;
   isPremium: boolean;
   isPlanVisible: boolean;
+  isDark: boolean;
   timeOfDay: TimeOfDay;
   palette: Palette;
   ctaLabel: string;
@@ -45,7 +47,7 @@ export type MyPageViewModel = {
 export function useMyPageScreen(): MyPageViewModel {
   const role = useMembershipStore((state) => state.role);
   const setRole = useMembershipStore((state) => state.setRole);
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
+  const { isDark, palette } = useAppTheme();
   const spots = useSpotCatalogStore((state) => state.spots);
   const { favoriteSpotIds } = useFavorites();
   const [isPlanVisible, setIsPlanVisible] = useState(false);
@@ -112,8 +114,9 @@ export function useMyPageScreen(): MyPageViewModel {
     role,
     isPremium,
     isPlanVisible,
-    timeOfDay,
-    palette: palettes[timeOfDay],
+    isDark,
+    timeOfDay: isDark ? 'night' : 'day',
+    palette,
     ctaLabel: isPremium
       ? '特典・プラン内容を見る'
       : `プレミアムプラン（${PREMIUM_PLAN.headline}）に登録する`,

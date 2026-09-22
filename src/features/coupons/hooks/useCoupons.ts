@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Coupon } from '@/types';
+import {
+  notifyOfflineCache,
+  readCachedCatalogCoupons,
+  writeCachedCatalog,
+} from '../../../../hooks/dataCache';
 import { fetchCoupons } from '../api/couponRepository';
 import { useSpotCatalogStore } from '@/features/spots/store/spotCatalogStore';
 
@@ -23,12 +28,20 @@ export function useCoupons(): UseCouponsResult {
     try {
       const rows = await fetchCoupons();
       setCoupons(rows);
+      const catalogSpots = useSpotCatalogStore.getState().spots;
+      await writeCachedCatalog(catalogSpots, rows);
     } catch (caught) {
-      const message =
-        caught instanceof Error
-          ? caught.message
-          : 'クーポンの取得に失敗しました。';
-      setError(message);
+      const cached = await readCachedCatalogCoupons();
+      if (cached.length > 0) {
+        setCoupons(cached);
+        notifyOfflineCache();
+      } else {
+        const message =
+          caught instanceof Error
+            ? caught.message
+            : 'クーポンの取得に失敗しました。';
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }

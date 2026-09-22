@@ -1,42 +1,64 @@
 import { useMemo, useState, type ReactElement } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  ErrorState,
-  SearchBar,
-  SpotCardSkeleton,
-  SpotDetailModal,
-} from '@/components';
+import { Button, ErrorState, SearchBar, SpotCardSkeleton, SpotDetailModal } from '@/components';
+import { useArea, useAppTheme } from '@/context';
 import { applySearchAndSort, type SpotSortBy } from '../../hooks/spotQuery';
+import { useFavoriteBulk } from '../../hooks/useFavoriteBulk';
 import { useFavoriteSpots } from '../../hooks/useFavoriteSpots';
-import { useSpotFilterStore } from '@/features/spots';
+import { usePlans } from '../../hooks/usePlans';
+import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
 import type { TabScreenProps } from '@/navigation/types';
-import { palettes } from '@/theme';
 import type { Spot } from '../../types/database';
 import { EmptyState } from './components/EmptyState';
 import { FavoriteSpotCard } from './components/FavoriteSpotCard';
+import { PlanCreateModal } from './components/PlanCreateModal';
 
 type FavoritesScreenProps = TabScreenProps<'Favorites'>;
 
 export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
-  const palette = palettes[timeOfDay];
-  const { spots, loading, error, toggleFavorite, refetch } = useFavoriteSpots();
+  const { isDark, palette } = useAppTheme();
+  const { area } = useArea();
+  const { spots, loading, error, toggleFavorite, removeFavorites, refetch } =
+    useFavoriteSpots();
+  const { saving, createPlan } = usePlans();
+  const { addRecentlyViewed } = useRecentlyViewed();
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SpotSortBy>('default');
+  const [planVisible, setPlanVisible] = useState(false);
+  const [planSeedSpots, setPlanSeedSpots] = useState<Spot[]>([]);
   const visibleSpots = useMemo(
-    () => applySearchAndSort(spots, searchQuery, sortBy),
-    [searchQuery, sortBy, spots],
+    () =>
+      applySearchAndSort(spots, searchQuery, sortBy, {
+        latitude: area.latitude,
+        longitude: area.longitude,
+      }),
+    [area.latitude, area.longitude, searchQuery, sortBy, spots],
   );
+  const {
+    editing,
+    selectedIds,
+    selectedSpots,
+    selectedCount,
+    enterEdit,
+    exitEdit,
+    toggleSelect,
+  } = useFavoriteBulk(visibleSpots);
 
   const handleOpenSpot = (spot: Spot): void => {
+    if (editing) {
+      toggleSelect(spot.id);
+      return;
+    }
+
     console.log('[DateSpot] favorite spot press', {
       id: spot.id,
       name: spot.name,
     });
+    addRecentlyViewed(spot.id);
     setSelectedSpot(spot);
   };
 
@@ -61,6 +83,45 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
     );
   };
 
+  const handleBulkDelete = (): void => {
+    if (selectedCount === 0) {
+      Alert.alert('スポットを選択してください', '削除するスポットを選んでください。');
+      return;
+    }
+
+    Alert.alert(
+      '選択したスポットを削除しますか？',
+      `${selectedCount}件のお気に入りを解除します。`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '削除する',
+          style: 'destructive',
+          onPress: () => {
+            void removeFavorites(selectedIds).then(() => {
+              exitEdit();
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCreatePlan = (): void => {
+    if (selectedCount === 0) {
+      Alert.alert(
+        'スポットを選択してください',
+        'プランに入れるスポットを選んでください。',
+      );
+      return;
+    }
+
+    setPlanSeedSpots(selectedSpots);
+    setPlanVisible(true);
+  };
+
+  const footerHeight = editing ? 168 + insets.bottom : 0;
+
   const screenStyle = [
     styles.screen,
     {
@@ -72,7 +133,7 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
   if (loading && spots.length === 0) {
     return (
       <View style={screenStyle}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.header}>
             <Text style={[styles.kicker, { color: palette.primary }]}>
@@ -95,7 +156,7 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
   if (error !== null && spots.length === 0) {
     return (
       <View style={screenStyle}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <ErrorState
           palette={palette}
           message={error}
@@ -109,27 +170,58 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
 
   return (
     <View style={screenStyle}>
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <FlatList
         data={visibleSpots}
-        extraData={`${searchQuery}-${sortBy}`}
+        extraData={`${searchQuery}-${sortBy}-${editing}-${selectedIds.join(',')}`}
         keyExtractor={(item) => item.id}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: insets.bottom + 24 },
+          { paddingBottom: insets.bottom + 24 + footerHeight },
           visibleSpots.length === 0 ? styles.emptyContent : null,
         ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={[styles.kicker, { color: palette.primary }]}>
-              Favorites
-            </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
-              お気に入り
-            </Text>
+            <View style={styles.titleRow}>
+              <View style={styles.titleCopy}>
+                <Text style={[styles.kicker, { color: palette.primary }]}>
+                  Favorites
+                </Text>
+                <Text style={[styles.heading, { color: palette.text }]}>
+                  お気に入り
+                </Text>
+              </View>
+              {spots.length > 0 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={editing ? '編集を終了' : '編集'}
+                  onPress={editing ? exitEdit : enterEdit}
+                  style={[
+                    styles.editButton,
+                    {
+                      backgroundColor: editing
+                        ? palette.primaryMuted
+                        : palette.surface,
+                      borderColor: editing ? palette.primary : palette.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.editLabel,
+                      { color: editing ? palette.primary : palette.text },
+                    ]}
+                  >
+                    {editing ? '完了' : '編集'}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
             <Text style={[styles.lead, { color: palette.textSecondary }]}>
-              保存したデートスポットを、あとからゆっくり見返せます。
+              {editing
+                ? '複数のスポットを選んで、一括削除やプラン作成ができます。'
+                : '保存したデートスポットを、あとからゆっくり見返せます。'}
             </Text>
             <SearchBar
               searchQuery={searchQuery}
@@ -160,16 +252,56 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
           <FavoriteSpotCard
             spot={item}
             palette={palette}
+            selectionMode={editing}
+            selected={selectedIds.includes(item.id)}
             onPress={() => handleOpenSpot(item)}
             onRemoveFavorite={() => handleRemoveFavorite(item)}
           />
         )}
       />
+      {editing ? (
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: palette.surface,
+              borderColor: palette.border,
+              paddingBottom: Math.max(insets.bottom, 12),
+            },
+          ]}
+        >
+          <Text style={[styles.footerCount, { color: palette.textSecondary }]}>
+            {selectedCount}件選択中
+          </Text>
+          <Button
+            label="選択したスポットを削除"
+            palette={palette}
+            variant="ghost"
+            onPress={handleBulkDelete}
+          />
+          <Button
+            label="選択したスポットからプランを作成"
+            palette={palette}
+            onPress={handleCreatePlan}
+          />
+        </View>
+      ) : null}
       <SpotDetailModal
         visible={selectedSpot !== null}
         spot={selectedSpot}
         palette={palette}
         onClose={() => setSelectedSpot(null)}
+      />
+      <PlanCreateModal
+        visible={planVisible}
+        palette={palette}
+        saving={saving}
+        initialSpots={planSeedSpots}
+        onClose={() => {
+          setPlanVisible(false);
+          exitEdit();
+        }}
+        onSave={createPlan}
       />
     </View>
   );
@@ -190,6 +322,27 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 20,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  titleCopy: {
+    flex: 1,
+    gap: 8,
+  },
+  editButton: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 18,
+  },
+  editLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
   kicker: {
     fontSize: 13,
     fontWeight: '700',
@@ -209,5 +362,19 @@ const styles = StyleSheet.create({
   },
   skeletonList: {
     gap: 14,
+  },
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    gap: 8,
+  },
+  footerCount: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

@@ -1,4 +1,5 @@
 import type { Spot } from '../types/database';
+import { haversineKm, type GeoPoint } from './geo';
 
 export type SpotSortBy = 'default' | 'price_asc' | 'price_desc' | 'name';
 
@@ -62,10 +63,25 @@ export function applySearchAndSort(
   spots: readonly Spot[],
   searchQuery: string,
   sortBy: SpotSortBy,
+  origin?: GeoPoint | null,
 ): Spot[] {
   const filtered = spots.filter((spot) => matchesSearchQuery(spot, searchQuery));
   if (sortBy === 'default') {
-    return filtered;
+    if (origin === undefined || origin === null) {
+      return filtered;
+    }
+
+    return [...filtered].sort((left, right) => {
+      const leftDistance = haversineKm(origin, {
+        latitude: left.latitude,
+        longitude: left.longitude,
+      });
+      const rightDistance = haversineKm(origin, {
+        latitude: right.latitude,
+        longitude: right.longitude,
+      });
+      return leftDistance - rightDistance;
+    });
   }
 
   return [...filtered].sort((left, right) => compareSpots(left, right, sortBy));

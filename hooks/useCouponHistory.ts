@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useCouponUsage } from '@/features/coupons';
 import { formatUsedAt } from '@/features/coupons/utils/couponStatus';
-import { useSpotCatalogStore, useSpotFilterStore } from '@/features/spots';
-import { palettes, type Palette } from '@/theme';
-import type { TimeOfDay } from '@/types';
+import { useAppTheme } from '@/context';
+import { useSpotCatalogStore } from '@/features/spots';
+import type { Palette } from '@/theme';
 
 export type CouponHistoryItem = {
   key: string;
@@ -18,13 +18,13 @@ export type UseCouponHistoryResult = {
   items: CouponHistoryItem[];
   loading: boolean;
   error: string | null;
-  timeOfDay: TimeOfDay;
+  isDark: boolean;
   palette: Palette;
   refetch: () => Promise<void>;
 };
 
 export function useCouponHistory(): UseCouponHistoryResult {
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
+  const { isDark, palette } = useAppTheme();
   const spots = useSpotCatalogStore((state) => state.spots);
   const catalogCoupons = useSpotCatalogStore((state) => state.coupons);
   const { history, isLoading, error, reload } = useCouponUsage();
@@ -55,8 +55,8 @@ export function useCouponHistory(): UseCouponHistoryResult {
     items,
     loading: isLoading,
     error,
-    timeOfDay,
-    palette: palettes[timeOfDay],
+    isDark,
+    palette,
     refetch: reload,
   };
 }

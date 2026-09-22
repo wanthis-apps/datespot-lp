@@ -13,6 +13,7 @@ const SAMPLE_ROW: SpotRowWithCoupons = {
   image_url: 'https://example.com/bloom.jpg',
   area: '代官山',
   description: 'テスト用',
+  tags: ['rainy_ok', 'credit_card'],
   created_at: '2026-01-01T00:00:00.000Z',
   coupons: [
     {

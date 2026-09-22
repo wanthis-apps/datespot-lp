@@ -13,7 +13,7 @@ export function CouponHistoryScreen(
   _props: CouponHistoryScreenProps,
 ): ReactElement {
   const insets = useSafeAreaInsets();
-  const { items, loading, error, timeOfDay, palette, refetch } =
+  const { items, loading, error, isDark, palette, refetch } =
     useCouponHistory();
 
   const screenStyle = [
@@ -27,7 +27,7 @@ export function CouponHistoryScreen(
   if (loading && items.length === 0) {
     return (
       <View style={screenStyle}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.header}>
             <Text style={[styles.kicker, { color: palette.primary }]}>
@@ -49,7 +49,7 @@ export function CouponHistoryScreen(
   if (error !== null && items.length === 0) {
     return (
       <View style={screenStyle}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <ErrorState
           palette={palette}
           message={error}
@@ -63,7 +63,7 @@ export function CouponHistoryScreen(
 
   return (
     <View style={screenStyle}>
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <FlatList
         data={items}
         keyExtractor={(item) => item.key}

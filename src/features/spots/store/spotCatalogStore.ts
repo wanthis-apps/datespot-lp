@@ -2,6 +2,12 @@ import { create } from 'zustand';
 import { fetchCoupons } from '@/features/coupons/api/couponRepository';
 import type { Coupon, Spot } from '@/types';
 import {
+  notifyOfflineCache,
+  readCachedCatalogCoupons,
+  readCachedCatalogSpots,
+  writeCachedCatalog,
+} from '../../../../hooks/dataCache';
+import {
   fetchSpotCatalog,
   type DataSource,
 } from '../api/spotRepository';
@@ -40,6 +46,21 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
       const result = await fetchSpotCatalog();
 
       if (!result.ok) {
+        const cachedSpots = await readCachedCatalogSpots();
+        const cachedCoupons = await readCachedCatalogCoupons();
+        if (cachedSpots.length > 0) {
+          set({
+            spots: cachedSpots,
+            coupons: cachedCoupons,
+            source: result.source,
+            status: 'ready',
+            message: result.message,
+            error: null,
+          });
+          notifyOfflineCache();
+          return;
+        }
+
         set({
           spots: [],
           coupons: [],
@@ -56,8 +77,10 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
         coupons = await fetchCoupons();
       } catch (couponError) {
         console.error('[DateSpot] coupons 取得で例外', couponError);
+        coupons = await readCachedCatalogCoupons();
       }
 
+      await writeCachedCatalog(result.spots, coupons);
       set({
         spots: result.spots,
         coupons,
@@ -72,6 +95,21 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
           ? error.message
           : 'スポットの取得に失敗しました。';
       console.error('[DateSpot] スポット取得で例外', message);
+      const cachedSpots = await readCachedCatalogSpots();
+      const cachedCoupons = await readCachedCatalogCoupons();
+      if (cachedSpots.length > 0) {
+        set({
+          spots: cachedSpots,
+          coupons: cachedCoupons,
+          source: null,
+          status: 'ready',
+          message,
+          error: null,
+        });
+        notifyOfflineCache();
+        return;
+      }
+
       set({
         spots: [],
         coupons: [],

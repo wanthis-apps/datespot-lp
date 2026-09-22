@@ -1,4 +1,4 @@
-import { type ReactElement, useLayoutEffect } from 'react';
+import { type ReactElement, useEffect, useLayoutEffect } from 'react';
 import {
   Alert,
   ScrollView,
@@ -9,13 +9,13 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErrorState, LoadingState, RemoteImage } from '@/components';
+import { useAppTheme } from '@/context';
+import { useRecentlyViewed } from '../../../../hooks/useRecentlyViewed';
 import { CouponCard, useCouponUsage } from '@/features/coupons';
-import { palettes } from '@/theme';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { FavoriteButton } from '../components/FavoriteButton';
 import { useFavorites } from '../hooks/useFavorites';
 import { useSpotDetail } from '../hooks/useSpotDetail';
-import { useSpotFilterStore } from '../store/spotFilterStore';
 import {
   CATEGORY_LABELS,
   TIME_RECOMMENDED_LABELS,
@@ -29,12 +29,16 @@ export function SpotDetailScreen({
 }: SpotDetailScreenProps): ReactElement {
   const { spotId } = route.params;
   const insets = useSafeAreaInsets();
-  const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
-  const palette = palettes[timeOfDay];
+  const { isDark, palette } = useAppTheme();
   const { spot, coupons, isLoading, error, reload } = useSpotDetail(spotId);
   const { isUsed, redeem, redeemingCouponId } = useCouponUsage();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { addRecentlyViewed } = useRecentlyViewed();
   const favorited = isFavorite(spotId);
+
+  useEffect(() => {
+    addRecentlyViewed(spotId);
+  }, [addRecentlyViewed, spotId]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -79,7 +83,7 @@ export function SpotDetailScreen({
   if (isLoading && spot === null) {
     return (
       <View style={[styles.screen, { backgroundColor: palette.background }]}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <LoadingState palette={palette} message="スポット詳細を読み込み中です…" />
       </View>
     );
@@ -88,7 +92,7 @@ export function SpotDetailScreen({
   if (error !== null && spot === null) {
     return (
       <View style={[styles.screen, { backgroundColor: palette.background }]}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <ErrorState
           palette={palette}
           message={error}
@@ -103,7 +107,7 @@ export function SpotDetailScreen({
   if (spot === null) {
     return (
       <View style={[styles.screen, { backgroundColor: palette.background }]}>
-        <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <ErrorState
           palette={palette}
           message="スポットが見つかりませんでした。"
@@ -117,7 +121,7 @@ export function SpotDetailScreen({
 
   return (
     <View style={[styles.screen, { backgroundColor: palette.background }]}>
-      <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView
         contentContainerStyle={[
           styles.content,

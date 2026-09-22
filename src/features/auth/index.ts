@@ -5,5 +5,9 @@ export { useAuth } from './hooks/useAuth';
 export type { UseAuthResult } from './hooks/useAuth';
 export { useAuthStore } from './store/authStore';
 export { useMyPageScreen } from './hooks/useMyPageScreen';
-export type { CouponListItem, MyPageViewModel } from './hooks/useMyPageScreen';
+export type {
+  CouponListItem,
+  MyPageViewModel,
+  UsedCouponHistoryItem,
+} from './hooks/useMyPageScreen';
 

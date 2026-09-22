@@ -31,15 +31,22 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
   return (
     <View style={[styles.screen, { backgroundColor: palette.background }]}>
       <StatusBar style={timeOfDay === 'night' ? 'light' : 'dark'} />
-      <SpotMap
-        spots={spots}
-        selectedSpotId={selectedSpot?.id ?? null}
-        initialRegion={initialRegion}
-        pinColor={palette.primary}
-        defaultPinColor={palette.muted}
-        onMarkerPress={selectSpot}
-        onMapPress={clearSelectedSpot}
-      />
+      <View style={styles.mapHost}>
+        <SpotMap
+          spots={spots}
+          selectedSpotId={selectedSpot?.id ?? null}
+          initialRegion={initialRegion}
+          pinColor={palette.primary}
+          defaultPinColor={palette.muted}
+          onMarkerPress={(spotId) => {
+            if (selectedSpot?.id === spotId) {
+              navigation.navigate('SpotDetail', { spotId });
+            }
+            selectSpot(spotId);
+          }}
+          onMapPress={clearSelectedSpot}
+        />
+      </View>
       <View style={[styles.badgeWrap, { top: insets.top + 12 }]}>
         <MapFilterBadge
           timeOfDay={timeOfDay}
@@ -63,7 +70,9 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
             palette={palette}
             onClose={dismissSelectedSpot}
             onPress={() => {
-              navigation.navigate('SpotDetail', { spotId: selectedSpot.id });
+              navigation.navigate('SpotDetail', {
+                spotId: selectedSpot.id,
+              });
             }}
           />
         </View>
@@ -75,6 +84,13 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  mapHost: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   badgeWrap: {
     position: 'absolute',

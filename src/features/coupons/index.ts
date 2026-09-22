@@ -6,4 +6,5 @@ export { useCouponUsage } from './hooks/useCouponUsage';
 export type { UseCouponUsageResult } from './hooks/useCouponUsage';
 export { useCouponUsageStore } from './store/couponUsageStore';
 export { CouponCard } from './components/CouponCard';
-export { isCouponExpired, formatCouponExpiry } from './utils/couponStatus';
+export { CouponHistoryCard } from './components/CouponHistoryCard';
+export { isCouponExpired, formatCouponExpiry, formatUsedAt } from './utils/couponStatus';

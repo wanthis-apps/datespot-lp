@@ -16,3 +16,18 @@ export function formatCouponExpiry(validUntil: string): string {
 
   return `${date.toLocaleDateString('ja-JP')} まで`;
 }
+
+export function formatUsedAt(usedAt: string): string {
+  const date = new Date(usedAt);
+  if (Number.isNaN(date.getTime())) {
+    return '利用日時不明';
+  }
+
+  return date.toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}

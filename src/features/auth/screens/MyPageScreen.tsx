@@ -10,7 +10,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components';
-import { CouponCard } from '@/features/coupons';
+import { CouponCard, CouponHistoryCard, formatUsedAt } from '@/features/coupons';
+import { SpotListRow } from '@/features/spots/components/SpotListRow';
 import { MembershipStatusCard } from '@/features/subscription/components/MembershipStatusCard';
 import { PremiumPlanModal } from '@/features/subscription/components/PremiumPlanModal';
 import type { TabScreenProps } from '@/navigation/types';
@@ -18,7 +19,7 @@ import { useMyPageScreen } from '../hooks/useMyPageScreen';
 
 type MyPageScreenProps = TabScreenProps<'MyPage'>;
 
-export function MyPageScreen(_props: MyPageScreenProps): ReactElement {
+export function MyPageScreen({ navigation }: MyPageScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
   const {
     role,
@@ -27,9 +28,12 @@ export function MyPageScreen(_props: MyPageScreenProps): ReactElement {
     timeOfDay,
     palette,
     ctaLabel,
-    coupons,
+    favoriteSpots,
+    usedHistory,
+    availableCoupons,
     couponsLoading,
     couponsError,
+    historyLoading,
     redeemingCouponId,
     openPlan,
     closePlan,
@@ -50,6 +54,10 @@ export function MyPageScreen(_props: MyPageScreenProps): ReactElement {
         },
       },
     ]);
+  };
+
+  const openSpotDetail = (spotId: string): void => {
+    navigation.navigate('SpotDetail', { spotId });
   };
 
   return (
@@ -75,7 +83,55 @@ export function MyPageScreen(_props: MyPageScreenProps): ReactElement {
         <Button label={ctaLabel} onPress={openPlan} palette={palette} />
 
         <Text style={[styles.sectionTitle, { color: palette.text }]}>
-          クーポン一覧
+          お気に入りスポット
+        </Text>
+        {favoriteSpots.length === 0 ? (
+          <Text style={[styles.body, { color: palette.textSecondary }]}>
+            ハートを押して保存すると、ここに表示されます。
+          </Text>
+        ) : (
+          <View style={styles.list}>
+            {favoriteSpots.map((spot) => (
+              <SpotListRow
+                key={spot.id}
+                spot={spot}
+                palette={palette}
+                onPress={() => openSpotDetail(spot.id)}
+              />
+            ))}
+          </View>
+        )}
+
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>
+          利用済みクーポン履歴
+        </Text>
+        {historyLoading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color={palette.primary} />
+            <Text style={[styles.body, { color: palette.textSecondary }]}>
+              利用履歴を読み込み中です…
+            </Text>
+          </View>
+        ) : usedHistory.length === 0 ? (
+          <Text style={[styles.body, { color: palette.textSecondary }]}>
+            クーポンを使うと、ここに履歴が残ります。
+          </Text>
+        ) : (
+          <View style={styles.list}>
+            {usedHistory.map((item) => (
+              <CouponHistoryCard
+                key={item.key}
+                palette={palette}
+                spotName={item.spotName}
+                description={item.description}
+                usedAt={formatUsedAt(item.usedAt)}
+              />
+            ))}
+          </View>
+        )}
+
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>
+          使えるクーポン
         </Text>
         {couponsLoading ? (
           <View style={styles.loadingRow}>
@@ -98,13 +154,13 @@ export function MyPageScreen(_props: MyPageScreenProps): ReactElement {
               variant="ghost"
             />
           </View>
-        ) : coupons.length === 0 ? (
+        ) : availableCoupons.length === 0 ? (
           <Text style={[styles.body, { color: palette.textSecondary }]}>
-            利用できるクーポンはまだありません。
+            いま使えるクーポンはありません。
           </Text>
         ) : (
-          <View style={styles.couponList}>
-            {coupons.map((item) => (
+          <View style={styles.list}>
+            {availableCoupons.map((item) => (
               <CouponCard
                 key={item.coupon.id}
                 coupon={item.coupon}
@@ -167,7 +223,7 @@ const styles = StyleSheet.create({
   errorBox: {
     gap: 12,
   },
-  couponList: {
+  list: {
     gap: 12,
   },
 });

@@ -10,7 +10,7 @@ type SpotPreviewCardProps = {
   spot: Spot;
   palette: Palette;
   onClose: () => void;
-  onPress?: () => void;
+  onPress: () => void;
 };
 
 export function SpotPreviewCard({
@@ -21,11 +21,13 @@ export function SpotPreviewCard({
 }: SpotPreviewCardProps): ReactElement {
   const perk = hasFreeCoupon(spot)
     ? spot.couponDescription
-    : '提携特典はありません';
+    : '詳細を見てデートプランを確認';
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`${spot.name}の詳細を開く`}
+      accessibilityHint="スポット詳細画面に移動します"
       onPress={onPress}
       style={[
         styles.card,
@@ -45,18 +47,20 @@ export function SpotPreviewCard({
           {spot.area} ・ {CATEGORY_LABELS[spot.category]}
         </Text>
         <Text
-          style={[
-            styles.perk,
-            { color: hasFreeCoupon(spot) ? palette.primary : palette.muted },
-          ]}
+          style={[styles.perk, { color: palette.primary }]}
           numberOfLines={1}
         >
           {perk}
         </Text>
+        <View style={styles.ctaRow}>
+          <Text style={[styles.cta, { color: palette.primary }]}>詳細を見る</Text>
+          <Ionicons name="chevron-forward" size={16} color={palette.primary} />
+        </View>
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="閉じる"
+        accessibilityLabel="プレビューを閉じる"
+        hitSlop={8}
         onPress={onClose}
         style={styles.close}
       >
@@ -74,10 +78,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
     gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   image: {
-    width: 72,
-    height: 72,
+    width: 84,
+    height: 84,
     borderRadius: 14,
   },
   body: {
@@ -96,10 +105,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  ctaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 2,
+  },
+  cta: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   close: {
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'flex-start',
   },
 });

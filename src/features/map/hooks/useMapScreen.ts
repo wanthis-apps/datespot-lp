@@ -5,7 +5,8 @@ import { useFavoriteStore } from '@/features/spots/store/favoriteStore';
 import { useSpotCatalogStore } from '@/features/spots/store/spotCatalogStore';
 import { useSpotFilterStore } from '@/features/spots/store/spotFilterStore';
 import { filterSpots } from '@/features/spots/utils/filterSpots';
-import { TOKYO_REGION, type MapRegion } from '../types';
+import type { MapRegion } from '../types';
+import { computeMapRegion } from '../utils/mapCoordinates';
 
 export type MapScreenViewModel = {
   timeOfDay: TimeOfDay;
@@ -61,6 +62,8 @@ export function useMapScreen(): MapScreenViewModel {
   const selectedSpot =
     spots.find((spot) => spot.id === selectedSpotId) ?? null;
 
+  const initialRegion = useMemo(() => computeMapRegion(spots), [spots]);
+
   useEffect(() => {
     if (
       selectedSpotId !== null &&
@@ -97,7 +100,7 @@ export function useMapScreen(): MapScreenViewModel {
     spots,
     selectedSpot,
     palette: palettes[timeOfDay],
-    initialRegion: TOKYO_REGION,
+    initialRegion,
     selectSpot,
     clearSelectedSpot,
     dismissSelectedSpot,

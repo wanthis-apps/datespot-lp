@@ -13,7 +13,7 @@ import {
   SpotDetailModal,
   TagFilterModal,
 } from '@/components';
-import { useArea, useAppTheme } from '@/context';
+import { useAppTheme, useDistanceOrigin } from '@/context';
 import { mapCatalogSpot } from '../../../../hooks/mapRecords';
 import { applySearchAndSort } from '../../../../hooks/spotQuery';
 import { matchesSelectedTags } from '../../../../hooks/spotTags';
@@ -34,7 +34,7 @@ type HomeScreenProps = TabScreenProps<'Home'>;
 export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
   const { isDark } = useAppTheme();
-  const { area: referenceArea } = useArea();
+  const origin = useDistanceOrigin();
   const { unreadCount } = useNotifications();
   const { recentlyViewedSpots, addRecentlyViewed } = useRecentlyViewed();
   const announcement = useAnnouncement();
@@ -130,16 +130,14 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
       return [mapped];
     });
 
-    return applySearchAndSort(filtered, searchQuery, sortBy, {
-      latitude: referenceArea.latitude,
-      longitude: referenceArea.longitude,
-    }).flatMap((spot) => {
-      const catalogSpot = catalogById.get(spot.id);
-      return catalogSpot === undefined ? [] : [catalogSpot];
-    });
+    return applySearchAndSort(filtered, searchQuery, sortBy, origin).flatMap(
+      (spot) => {
+        const catalogSpot = catalogById.get(spot.id);
+        return catalogSpot === undefined ? [] : [catalogSpot];
+      },
+    );
   }, [
-    referenceArea.latitude,
-    referenceArea.longitude,
+    origin,
     searchQuery,
     selectedCategory,
     selectedPriceRange,
@@ -197,9 +195,11 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <FlatList
         data={visibleSpots}
-        extraData={`${isDark}-${timeOfDay}-${relationship}-${area}-${referenceArea.id}-${category}-${searchQuery}-${sortBy}-${favoritesOnly}-${favoriteSpotIds.join(',')}-${sourceLabel}-${error ?? ''}-${selectedCategory ?? ''}-${selectedPriceRange ?? ''}-${unreadCount}-${selectedTags.join(',')}-${tagMatchMode}-${recentlyViewedSpots.map((spot) => spot.id).join(',')}`}
+        extraData={`${isDark}-${timeOfDay}-${relationship}-${area}-${origin.latitude}-${origin.longitude}-${category}-${searchQuery}-${sortBy}-${favoritesOnly}-${favoriteSpotIds.join(',')}-${sourceLabel}-${error ?? ''}-${selectedCategory ?? ''}-${selectedPriceRange ?? ''}-${unreadCount}-${selectedTags.join(',')}-${tagMatchMode}-${recentlyViewedSpots.map((spot) => spot.id).join(',')}`}
         keyExtractor={(item) => item.id}
-        stickyHeaderIndices={[0]}
+        style={styles.listView}
+        nestedScrollEnabled
+        removeClippedSubviews={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           styles.list,
@@ -207,7 +207,7 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
         ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
-          <View>
+          <View collapsable={false}>
             <HomeHeader
               heading={heading}
               timeOfDay={timeOfDay}
@@ -296,6 +296,9 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+  },
+  listView: {
     flex: 1,
   },
   list: {

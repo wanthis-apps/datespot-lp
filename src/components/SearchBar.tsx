@@ -73,7 +73,11 @@ function SearchBarComponent({
         </Text>
         <ScrollView
           horizontal
+          nestedScrollEnabled
+          directionalLockEnabled
+          keyboardShouldPersistTaps="handled"
           showsHorizontalScrollIndicator={false}
+          style={styles.sortScroll}
           contentContainerStyle={styles.sortRow}
         >
           {SORT_CHIPS.map((option) => {
@@ -143,6 +147,9 @@ const styles = StyleSheet.create({
   sortLabel: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  sortScroll: {
+    flexGrow: 0,
   },
   sortRow: {
     gap: 8,

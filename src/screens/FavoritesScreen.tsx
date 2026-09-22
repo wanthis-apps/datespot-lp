@@ -3,7 +3,7 @@ import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ErrorState, SearchBar, SpotCardSkeleton, SpotDetailModal } from '@/components';
-import { useArea, useAppTheme } from '@/context';
+import { useAppTheme, useDistanceOrigin } from '@/context';
 import { applySearchAndSort, type SpotSortBy } from '../../hooks/spotQuery';
 import { useFavoriteBulk } from '../../hooks/useFavoriteBulk';
 import { useFavoriteSpots } from '../../hooks/useFavoriteSpots';
@@ -20,7 +20,7 @@ type FavoritesScreenProps = TabScreenProps<'Favorites'>;
 export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
   const { isDark, palette } = useAppTheme();
-  const { area } = useArea();
+  const origin = useDistanceOrigin();
   const { spots, loading, error, toggleFavorite, removeFavorites, refetch } =
     useFavoriteSpots();
   const { saving, createPlan } = usePlans();
@@ -32,11 +32,8 @@ export function FavoritesScreen(_props: FavoritesScreenProps): ReactElement {
   const [planSeedSpots, setPlanSeedSpots] = useState<Spot[]>([]);
   const visibleSpots = useMemo(
     () =>
-      applySearchAndSort(spots, searchQuery, sortBy, {
-        latitude: area.latitude,
-        longitude: area.longitude,
-      }),
-    [area.latitude, area.longitude, searchQuery, sortBy, spots],
+      applySearchAndSort(spots, searchQuery, sortBy, origin),
+    [origin, searchQuery, sortBy, spots],
   );
   const {
     editing,

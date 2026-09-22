@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useArea } from '@/context';
+import { useArea, useDistanceOrigin } from '@/context';
 import { getSupabaseClient } from '@/services/supabase';
 import type { Spot, SpotCategory } from '../types/database';
 import {
@@ -161,13 +161,7 @@ export function useSpots(): UseSpotsResult {
     tagMatchMode,
   ]);
 
-  const origin = useMemo(
-    () => ({
-      latitude: area.latitude,
-      longitude: area.longitude,
-    }),
-    [area.latitude, area.longitude],
-  );
+  const origin = useDistanceOrigin();
 
   const facetedSpots = useMemo(() => {
     return allSpots.filter((spot) => {

@@ -26,7 +26,11 @@ function RecentlyViewedSectionComponent({
       </Text>
       <ScrollView
         horizontal
+        nestedScrollEnabled
+        directionalLockEnabled
+        keyboardShouldPersistTaps="handled"
         showsHorizontalScrollIndicator={false}
+        style={styles.scroll}
         contentContainerStyle={styles.row}
       >
         {spots.map((spot) => (
@@ -80,6 +84,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
+  },
+  scroll: {
+    flexGrow: 0,
   },
   row: {
     gap: 10,

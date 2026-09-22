@@ -94,7 +94,7 @@ export function AreaHeader({ palette }: AreaHeaderProps): ReactElement {
               </Pressable>
             </View>
             <Text style={[styles.sheetLead, { color: colors.textSecondary }]}>
-              現在地の代わりに、この地点からの距離でスポットを並べます。
+              位置情報を許可すると現在地からの距離で並べます。未許可のときは、この地点を距離の基準にします。
             </Text>
             <View style={styles.list}>
               {areas.map((item) => {

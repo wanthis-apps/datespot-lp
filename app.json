@@ -33,6 +33,12 @@
         {
           "androidGoogleMapsApiKey": "AIzaSyCXsEx-EP1t99Q3k-c6FUbKw0GeJXclbCg"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "近くのデートスポットまでの距離を計算し、地図に現在地を表示するために位置情報を使用します。"
+        }
       ]
     ],
     "extra": {

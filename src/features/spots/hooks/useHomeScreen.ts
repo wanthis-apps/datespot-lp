@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useArea, useAppTheme } from '@/context';
+import { useAppTheme, useDistanceOrigin } from '@/context';
 import type { Palette } from '@/theme';
 import type { RelationshipStatus, Spot, SpotCategory, TimeOfDay } from '@/types';
 import { haversineKm } from '../../../../hooks/geo';
@@ -37,7 +37,7 @@ export type HomeScreenViewModel = {
 
 export function useHomeScreen(): HomeScreenViewModel {
   const { palette } = useAppTheme();
-  const { area: referenceArea } = useArea();
+  const origin = useDistanceOrigin();
   const timeOfDay = useSpotFilterStore((state) => state.timeOfDay);
   const relationship = useSpotFilterStore((state) => state.relationship);
   const area = useSpotFilterStore((state) => state.area);
@@ -64,11 +64,6 @@ export function useHomeScreen(): HomeScreenViewModel {
   const areas = useMemo(() => collectAreas(allSpots), [allSpots]);
 
   const spots = useMemo(() => {
-    const origin = {
-      latitude: referenceArea.latitude,
-      longitude: referenceArea.longitude,
-    };
-
     return filterSpots(allSpots, {
       timeOfDay,
       relationship,
@@ -96,8 +91,7 @@ export function useHomeScreen(): HomeScreenViewModel {
     favoriteSpotIds,
     favoritesOnly,
     query,
-    referenceArea.latitude,
-    referenceArea.longitude,
+    origin,
     relationship,
     timeOfDay,
   ]);

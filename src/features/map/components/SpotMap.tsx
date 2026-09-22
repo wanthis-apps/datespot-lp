@@ -11,11 +11,15 @@ export function SpotMap({
   initialRegion,
   pinColor,
   defaultPinColor,
+  showsUserLocation = false,
+  userCoordinate = null,
+  mapPadding,
   onMarkerPress,
   onMapPress,
 }: SpotMapProps): ReactElement {
   const mapRef = useRef<MapView>(null);
   const previousRegionRef = useRef(initialRegion);
+  const centeredOnUserRef = useRef(false);
 
   useEffect(() => {
     const previousRegion = previousRegionRef.current;
@@ -26,6 +30,23 @@ export function SpotMap({
 
     mapRef.current?.animateToRegion(initialRegion, 280);
   }, [initialRegion]);
+
+  useEffect(() => {
+    if (userCoordinate === null || centeredOnUserRef.current) {
+      return;
+    }
+
+    centeredOnUserRef.current = true;
+    mapRef.current?.animateToRegion(
+      {
+        latitude: userCoordinate.latitude,
+        longitude: userCoordinate.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      },
+      400,
+    );
+  }, [userCoordinate]);
 
   const handleMarkerPress = (spot: Spot): void => {
     onMarkerPress(spot.id);
@@ -49,8 +70,13 @@ export function SpotMap({
         style={styles.map}
         provider={PROVIDER_GOOGLE}
         initialRegion={initialRegion}
+        mapType="standard"
+        userInterfaceStyle="light"
+        customMapStyle={[]}
+        mapPadding={mapPadding}
         onPress={onMapPress}
-        showsUserLocation={false}
+        showsUserLocation={showsUserLocation}
+        showsMyLocationButton={showsUserLocation}
         showsCompass={false}
       >
         {spots.map((spot) => {

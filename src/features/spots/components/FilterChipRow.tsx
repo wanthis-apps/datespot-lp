@@ -23,7 +23,11 @@ function FilterChipRowComponent<T extends string | null>({
   return (
     <ScrollView
       horizontal
+      nestedScrollEnabled
+      directionalLockEnabled
+      keyboardShouldPersistTaps="handled"
       showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
       contentContainerStyle={styles.row}
     >
       {options.map((option) => {
@@ -64,6 +68,9 @@ export const FilterChipRow = memo(
 ) as typeof FilterChipRowComponent;
 
 const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 0,
+  },
   row: {
     gap: 8,
     paddingRight: 8,

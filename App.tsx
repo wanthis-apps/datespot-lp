@@ -7,6 +7,7 @@ import {
   LanguageProvider,
   ThemeProvider,
   ToastProvider,
+  UserLocationProvider,
   useAppTheme,
 } from '@/context';
 import { useAuth } from '@/features/auth';
@@ -37,9 +38,11 @@ export default function App(): ReactElement {
         <ThemeProvider>
           <LanguageProvider>
             <ToastProvider>
-              <AreaProvider>
+            <AreaProvider>
+              <UserLocationProvider>
                 <AppContent />
-              </AreaProvider>
+              </UserLocationProvider>
+            </AreaProvider>
             </ToastProvider>
           </LanguageProvider>
         </ThemeProvider>

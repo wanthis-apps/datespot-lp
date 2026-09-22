@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AreaHeader } from '@/components';
-import { useAppTheme } from '@/context';
+import { useAppTheme, useUserLocation } from '@/context';
 import type { TabScreenProps } from '@/navigation/types';
 import { MapFilterBadge } from '../components/MapFilterBadge';
 import { SpotMap } from '../components/SpotMap';
@@ -15,6 +15,7 @@ type MapScreenProps = TabScreenProps<'Map'>;
 export function MapScreen({ navigation }: MapScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
   const { isDark } = useAppTheme();
+  const { coordinates, permission } = useUserLocation();
   const {
     timeOfDay,
     relationship,
@@ -41,6 +42,14 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
           initialRegion={initialRegion}
           pinColor={palette.primary}
           defaultPinColor={palette.muted}
+          showsUserLocation={permission === 'granted'}
+          userCoordinate={coordinates}
+          mapPadding={{
+            top: insets.top + 132,
+            right: 8,
+            bottom: insets.bottom + (selectedSpot !== null ? 132 : 24),
+            left: 8,
+          }}
           onMarkerPress={(spotId) => {
             if (selectedSpot?.id === spotId) {
               navigation.navigate('SpotDetail', { spotId });
@@ -50,7 +59,10 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
           onMapPress={clearSelectedSpot}
         />
       </View>
-      <View style={[styles.badgeWrap, { top: insets.top + 12 }]}>
+      <View
+        pointerEvents="box-none"
+        style={[styles.badgeWrap, { top: insets.top + 12 }]}
+      >
         <AreaHeader palette={palette} />
         <MapFilterBadge
           timeOfDay={timeOfDay}
@@ -64,10 +76,8 @@ export function MapScreen({ navigation }: MapScreenProps): ReactElement {
       </View>
       {selectedSpot !== null ? (
         <View
-          style={[
-            styles.previewWrap,
-            { bottom: insets.bottom + 16 },
-          ]}
+          pointerEvents="box-none"
+          style={[styles.previewWrap, { bottom: insets.bottom + 16 }]}
         >
           <SpotPreviewCard
             spot={selectedSpot}

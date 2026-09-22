@@ -9,6 +9,11 @@ export { LanguageProvider, useI18n } from './LanguageContext';
 export type { LanguageContextValue } from './LanguageContext';
 export { ThemeProvider, useAppTheme } from './ThemeContext';
 export { ToastProvider, useToast, showToast } from './ToastContext';
+export {
+  UserLocationProvider,
+  useDistanceOrigin,
+  useUserLocation,
+} from './UserLocationContext';
 export type {
   ToastContextValue,
   ToastPayload,

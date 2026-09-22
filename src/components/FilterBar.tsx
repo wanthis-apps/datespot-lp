@@ -59,7 +59,11 @@ function ChipRow<T extends string | number | null>({
       </Text>
       <ScrollView
         horizontal
+        nestedScrollEnabled
+        directionalLockEnabled
+        keyboardShouldPersistTaps="handled"
         showsHorizontalScrollIndicator={false}
+        style={styles.scroll}
         contentContainerStyle={styles.row}
       >
         {options.map((option) => {
@@ -172,6 +176,9 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  scroll: {
+    flexGrow: 0,
   },
   row: {
     gap: 8,

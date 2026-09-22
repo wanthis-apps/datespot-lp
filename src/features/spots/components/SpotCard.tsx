@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RemoteImage } from '@/components';
-import { useArea } from '@/context';
+import { useDistanceOrigin } from '@/context';
 import { formatDistanceKm, haversineKm } from '../../../../hooks/geo';
 import type { Palette } from '@/theme';
 import type { Spot } from '@/types';
@@ -26,21 +26,16 @@ function SpotCardComponent({
     state.favoriteSpotIds.includes(spot.id),
   );
   const toggleFavorite = useFavoriteStore((state) => state.toggleFavorite);
-  const { area } = useArea();
+  const origin = useDistanceOrigin();
   const distanceLabel = useMemo(
     () =>
       formatDistanceKm(
-        haversineKm(
-          { latitude: area.latitude, longitude: area.longitude },
-          { latitude: spot.location.lat, longitude: spot.location.lng },
-        ),
+        haversineKm(origin, {
+          latitude: spot.location.lat,
+          longitude: spot.location.lng,
+        }),
       ),
-    [
-      area.latitude,
-      area.longitude,
-      spot.location.lat,
-      spot.location.lng,
-    ],
+    [origin, spot.location.lat, spot.location.lng],
   );
 
   const handleToggleFavorite = useCallback((): void => {

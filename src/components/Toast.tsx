@@ -109,6 +109,22 @@ export function Toast({ toast, onHide }: ToastProps): ReactElement | null {
         <Text style={[styles.message, { color: palette.text }]}>
           {toast.message}
         </Text>
+        {toast.actionLabel !== null && toast.onAction !== null ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={toast.actionLabel}
+            hitSlop={8}
+            onPress={() => {
+              toast.onAction?.();
+              onHide();
+            }}
+            style={styles.action}
+          >
+            <Text style={[styles.actionLabel, { color: palette.primary }]}>
+              {toast.actionLabel}
+            </Text>
+          </Pressable>
+        ) : null}
       </Pressable>
     </Animated.View>
   );
@@ -140,5 +156,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+  },
+  action: {
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  actionLabel: {
+    fontSize: 14,
+    fontWeight: '800',
   },
 });

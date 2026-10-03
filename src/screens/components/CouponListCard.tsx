@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, RemoteImage } from '@/components';
 import { formatValidUntil } from '../../../hooks/mapRecords';
@@ -10,12 +10,14 @@ type CouponListCardProps = {
   coupon: Coupon;
   palette: Palette;
   onUse: () => void;
+  onOpenSpot: () => void;
 };
 
 export function CouponListCard({
   coupon,
   palette,
   onUse,
+  onOpenSpot,
 }: CouponListCardProps): ReactElement {
   const spotName = coupon.spot?.name ?? 'スポット';
 
@@ -28,35 +30,42 @@ export function CouponListCard({
     >
       <View style={[styles.accent, { backgroundColor: palette.primary }]} />
       <View style={styles.body}>
-        <View style={styles.header}>
-          <RemoteImage
-            uri={coupon.spot?.image_url}
-            style={styles.thumb}
-            accessibilityLabel={spotName}
-          />
-          <View style={styles.headerText}>
-            <Text
-              style={[styles.spotName, { color: palette.textSecondary }]}
-              numberOfLines={1}
-            >
-              {spotName}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${spotName}の詳細を開く`}
+          onPress={onOpenSpot}
+          style={styles.spotLink}
+        >
+          <View style={styles.header}>
+            <RemoteImage
+              uri={coupon.spot?.image_url}
+              style={styles.thumb}
+              accessibilityLabel={spotName}
+            />
+            <View style={styles.headerText}>
+              <Text
+                style={[styles.spotName, { color: palette.textSecondary }]}
+                numberOfLines={1}
+              >
+                {spotName}
+              </Text>
+              <Text style={[styles.title, { color: palette.text }]}>
+                {coupon.title}
+              </Text>
+            </View>
+          </View>
+          {coupon.discount_detail.trim() !== coupon.title.trim() ? (
+            <Text style={[styles.detail, { color: palette.textSecondary }]}>
+              {coupon.discount_detail}
             </Text>
-            <Text style={[styles.title, { color: palette.text }]}>
-              {coupon.title}
+          ) : null}
+          <View style={styles.metaRow}>
+            <Ionicons name="calendar-outline" size={14} color={palette.muted} />
+            <Text style={[styles.expiry, { color: palette.muted }]}>
+              {formatValidUntil(coupon.valid_until)}
             </Text>
           </View>
-        </View>
-
-        <Text style={[styles.detail, { color: palette.textSecondary }]}>
-          {coupon.discount_detail}
-        </Text>
-
-        <View style={styles.metaRow}>
-          <Ionicons name="calendar-outline" size={14} color={palette.muted} />
-          <Text style={[styles.expiry, { color: palette.muted }]}>
-            {formatValidUntil(coupon.valid_until)}
-          </Text>
-        </View>
+        </Pressable>
 
         <Button label="クーポンを使用する" onPress={onUse} palette={palette} />
       </View>
@@ -82,6 +91,9 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     padding: 16,
+    gap: 10,
+  },
+  spotLink: {
     gap: 10,
   },
   header: {

@@ -2,6 +2,7 @@ import { type ReactElement } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
 import {
   NOTIFICATION_SETTING_ITEMS,
@@ -40,11 +41,11 @@ export function NotificationSettingsScreen(
         <Text style={[styles.kicker, { color: palette.primary }]}>
           Privacy
         </Text>
-        <Text style={[styles.heading, { color: palette.text }]}>
+        <FittedHeading style={[styles.heading, { color: palette.text }]}>
           通知・プライバシー設定
-        </Text>
+        </FittedHeading>
         <Text style={[styles.lead, { color: palette.textSecondary }]}>
-          受け取るお知らせの種類を選べます。設定はこの端末に保存され、ログイン中はアカウントにも同期します。
+          {'受け取るお知らせの種類を選べます。\n設定はこの端末に保存され、\nログイン中はアカウントにも同期します。'}
         </Text>
 
         <View

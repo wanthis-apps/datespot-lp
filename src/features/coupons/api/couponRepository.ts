@@ -2,6 +2,7 @@ import { getSupabaseClient } from '@/services/supabase';
 import { ensureAppUser, getCurrentUserId } from '@/features/auth/api/session';
 import { getSpots } from '@/features/spots/api/getSpots';
 import { mapCouponRow, mapUserCouponHistory } from '@/features/spots/api/mappers';
+import { uniqueCatalogCoupons } from '../utils/uniqueCoupons';
 import type { Coupon, RelationshipStatus, UserCouponHistory } from '@/types';
 
 export type RedeemCouponResult = {
@@ -12,20 +13,22 @@ export type RedeemCouponResult = {
 };
 
 export function getMockCoupons(): Coupon[] {
-  return getSpots().flatMap((spot) => {
-    if (spot.couponDescription === null) {
-      return [];
-    }
+  return uniqueCatalogCoupons(
+    getSpots().flatMap((spot) => {
+      if (spot.couponDescription === null) {
+        return [];
+      }
 
-    return [
-      {
-        id: `mock-coupon-${spot.id}`,
-        spotId: spot.id,
-        description: spot.couponDescription,
-        validUntil: '2099-12-31T23:59:59.000Z',
-      },
-    ];
-  });
+      return [
+        {
+          id: `mock-coupon-${spot.id}`,
+          spotId: spot.id,
+          description: spot.couponDescription,
+          validUntil: '2099-12-31T23:59:59.000Z',
+        },
+      ];
+    }),
+  );
 }
 
 export async function fetchCoupons(): Promise<Coupon[]> {
@@ -41,7 +44,7 @@ export async function fetchCoupons(): Promise<Coupon[]> {
     throw new Error(`coupons の取得に失敗しました: ${error.message}`);
   }
 
-  const coupons = (data ?? []).map(mapCouponRow);
+  const coupons = uniqueCatalogCoupons((data ?? []).map(mapCouponRow));
   console.log('[DateSpot] coupons 取得結果', {
     source: 'supabase',
     count: coupons.length,
@@ -65,7 +68,7 @@ export async function fetchCouponsBySpotId(spotId: string): Promise<Coupon[]> {
     throw new Error(`coupons の取得に失敗しました: ${error.message}`);
   }
 
-  return (data ?? []).map(mapCouponRow);
+  return uniqueCatalogCoupons((data ?? []).map(mapCouponRow));
 }
 
 export async function fetchUserCouponHistory(): Promise<UserCouponHistory[]> {

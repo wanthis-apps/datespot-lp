@@ -1,6 +1,5 @@
 import type { Spot } from '@/types';
 import type { MapRegion } from '../types';
-import type { MapCoordinate } from '../utils/mapCoordinates';
 
 export type MapEdgePadding = {
   top: number;
@@ -9,14 +8,22 @@ export type MapEdgePadding = {
   left: number;
 };
 
+export type SpotMapHandle = {
+  animateToRegion: (region: MapRegion, durationMs?: number) => void;
+};
+
 export type SpotMapProps = {
   spots: Spot[];
   selectedSpotId: string | null;
   initialRegion: MapRegion;
+  cameraNonce: number;
+  mapInstanceKey?: number;
+  markerEpoch?: number;
+  focusTarget?: MapRegion | null;
+  onRegionChangeComplete?: (region: MapRegion) => void;
   pinColor: string;
   defaultPinColor: string;
   showsUserLocation?: boolean;
-  userCoordinate?: MapCoordinate | null;
   mapPadding?: MapEdgePadding;
   onMarkerPress: (spotId: string) => void;
   onMapPress: () => void;

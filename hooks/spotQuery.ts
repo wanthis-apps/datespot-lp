@@ -20,6 +20,18 @@ export function matchesSearchQuery(spot: Spot, searchQuery: string): boolean {
   );
 }
 
+/** お気に入り検索。名前と住所の部分一致。カタログのエリアは address に入っている。 */
+export function matchesFavoriteQuery(spot: Spot, searchQuery: string): boolean {
+  const normalized = searchQuery.trim().toLowerCase();
+  if (normalized.length === 0) {
+    return true;
+  }
+
+  const name = spot.name.toLowerCase();
+  const address = (spot.address ?? '').toLowerCase();
+  return name.includes(normalized) || address.includes(normalized);
+}
+
 function compareByName(left: Spot, right: Spot): number {
   return left.name.localeCompare(right.name, 'ja');
 }

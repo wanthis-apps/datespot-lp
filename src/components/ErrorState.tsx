@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Palette } from '@/theme';
 import { Button } from './Button';
+import { FittedHeading } from './FittedHeading';
 
 export type ErrorStateProps = {
   palette: Palette;
@@ -44,7 +45,7 @@ export function ErrorState({
   const heading =
     title ?? (networkIssue ? '接続できません' : '読み込みに失敗しました');
   const body = networkIssue
-    ? 'ネットワーク接続を確認して、もう一度お試しください。'
+    ? 'ネットワーク接続を確認して、\nもう一度お試しください。'
     : message;
 
   return (
@@ -56,7 +57,9 @@ export function ErrorState({
           color={palette.primary}
         />
       </View>
-      <Text style={[styles.title, { color: palette.text }]}>{heading}</Text>
+      <FittedHeading style={[styles.title, { color: palette.text }]}>
+        {heading}
+      </FittedHeading>
       <Text style={[styles.message, { color: palette.textSecondary }]}>
         {body}
       </Text>

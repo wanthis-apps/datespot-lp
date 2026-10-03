@@ -1,7 +1,7 @@
-import { type ReactElement, type ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AreaHeader } from '@/components';
+import { AreaHeader, FittedHeading } from '@/components';
 import type { Palette } from '@/theme';
 import type { RelationshipStatus, TimeOfDay } from '@/types';
 import { RELATIONSHIP_LABELS, RELATIONSHIP_OPTIONS } from '../types';
@@ -49,6 +49,15 @@ export function HomeHeader({
   searchBar,
   filterBar,
 }: HomeHeaderProps): ReactElement {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterSummary = [
+    area ?? 'エリアすべて',
+    favoritesOnly ? 'お気に入り' : null,
+    relationship !== null ? RELATIONSHIP_LABELS[relationship] : null,
+  ]
+    .filter((item): item is string => item !== null)
+    .join(' ・ ');
+
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
       <View style={styles.topRow}>
@@ -71,12 +80,39 @@ export function HomeHeader({
           </Pressable>
         ) : null}
       </View>
-      <Text style={[styles.heading, { color: palette.text }]}>{heading}</Text>
+      <FittedHeading style={[styles.heading, { color: palette.text }]}>
+        {heading}
+      </FittedHeading>
       <AreaHeader palette={palette} />
       <Text style={[styles.source, { color: palette.textSecondary }]}>
         データソース: {sourceLabel}
       </Text>
       {searchBar}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: filtersOpen }}
+        onPress={() => setFiltersOpen((open) => !open)}
+        style={[styles.filterToggle, { backgroundColor: palette.surface, borderColor: palette.border }]}
+      >
+        <View style={styles.filterToggleText}>
+          <Text style={[styles.filterToggleLabel, { color: palette.text }]}>
+            絞り込み
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[styles.filterToggleSummary, { color: palette.textSecondary }]}
+          >
+            {filterSummary}
+          </Text>
+        </View>
+        <Ionicons
+          name={filtersOpen ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color={palette.textSecondary}
+        />
+      </Pressable>
+      {filtersOpen ? (
+        <>
       <TimeToggle
         value={timeOfDay}
         onChange={onTimeOfDayChange}
@@ -135,6 +171,8 @@ export function HomeHeader({
           </Text>
         </Pressable>
       ) : null}
+        </>
+      ) : null}
     </View>
   );
 }
@@ -182,12 +220,33 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: '700',
-    lineHeight: 34,
   },
   source: {
     fontSize: 12,
     fontWeight: '500',
     marginTop: -8,
+  },
+  filterToggle: {
+    minHeight: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterToggleText: {
+    flex: 1,
+    gap: 2,
+  },
+  filterToggleLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  filterToggleSummary: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   section: {
     gap: 8,

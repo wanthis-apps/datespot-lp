@@ -17,7 +17,8 @@ export const RESERVATION_TIMES: readonly ReservationTimeOption[] = [
   { id: '21:00', label: '21:00' },
 ];
 
-export const RESERVATION_PARTY_SIZES: readonly number[] = [1, 2, 3, 4];
+/** デート向けのため、空席確認の人数は2名で固定する。 */
+export const DATE_PARTY_SIZE = 2;
 
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString('ja-JP', {

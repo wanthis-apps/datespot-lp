@@ -1,12 +1,10 @@
-import { memo, useCallback, useMemo, type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RemoteImage } from '@/components';
-import { useDistanceOrigin } from '@/context';
-import { formatDistanceKm, haversineKm } from '../../../../hooks/geo';
 import type { Palette } from '@/theme';
+import { formatJapaneseText } from '@/utils/formatJapaneseText';
 import type { Spot } from '@/types';
-import { useFavoriteStore } from '../store/favoriteStore';
 import { CATEGORY_LABELS } from '../types';
 import { hasFreeCoupon } from '../utils/filterSpots';
 import { FavoriteButton } from './FavoriteButton';
@@ -22,26 +20,6 @@ function SpotCardComponent({
   palette,
   onPress,
 }: SpotCardProps): ReactElement {
-  const isFavorite = useFavoriteStore((state) =>
-    state.favoriteSpotIds.includes(spot.id),
-  );
-  const toggleFavorite = useFavoriteStore((state) => state.toggleFavorite);
-  const origin = useDistanceOrigin();
-  const distanceLabel = useMemo(
-    () =>
-      formatDistanceKm(
-        haversineKm(origin, {
-          latitude: spot.location.lat,
-          longitude: spot.location.lng,
-        }),
-      ),
-    [origin, spot.location.lat, spot.location.lng],
-  );
-
-  const handleToggleFavorite = useCallback((): void => {
-    void toggleFavorite(spot.id);
-  }, [spot.id, toggleFavorite]);
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -61,13 +39,6 @@ function SpotCardComponent({
           colors={['transparent', 'rgba(0, 0, 0, 0.45)']}
           style={styles.imageFade}
         />
-        <View style={styles.favorite}>
-          <FavoriteButton
-            isFavorite={isFavorite}
-            palette={palette}
-            onPress={handleToggleFavorite}
-          />
-        </View>
         {hasFreeCoupon(spot) ? (
           <View style={[styles.badge, { backgroundColor: palette.coupon }]}>
             <Text style={[styles.badgeText, { color: palette.couponText }]}>
@@ -75,17 +46,21 @@ function SpotCardComponent({
             </Text>
           </View>
         ) : null}
+        <View style={styles.favorite}>
+          <FavoriteButton spotId={spot.id} palette={palette} />
+        </View>
       </View>
       <View style={styles.body}>
         <Text style={[styles.name, { color: palette.text }]}>{spot.name}</Text>
         <Text style={[styles.meta, { color: palette.textSecondary }]}>
-          {spot.area} ・ {CATEGORY_LABELS[spot.category]} ・ {distanceLabel}
+          {spot.area} ・ {CATEGORY_LABELS[spot.category]}
         </Text>
         <Text
           numberOfLines={2}
+          textBreakStrategy="balanced"
           style={[styles.description, { color: palette.textSecondary }]}
         >
-          {spot.description}
+          {formatJapaneseText(spot.description, { maxBreaks: 1 })}
         </Text>
       </View>
     </Pressable>
@@ -117,12 +92,14 @@ const styles = StyleSheet.create({
   favorite: {
     position: 'absolute',
     top: 12,
-    left: 12,
+    right: 12,
+    zIndex: 2,
   },
   badge: {
     position: 'absolute',
     top: 12,
-    right: 12,
+    left: 12,
+    zIndex: 1,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -132,7 +109,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   body: {
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
     gap: 6,
   },
   name: {
@@ -146,5 +124,6 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 13,
     lineHeight: 20,
+    letterSpacing: 0.5,
   },
 });

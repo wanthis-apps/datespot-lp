@@ -17,9 +17,17 @@ type GlobalErrorUtils = {
 
 const errorUtils = (globalThis as { ErrorUtils?: GlobalErrorUtils }).ErrorUtils;
 
+function isUnsupportedMapLocationEvent(error: Error): boolean {
+  return error.message.includes('topUserLocationChange');
+}
+
 if (errorUtils !== undefined) {
   const previousHandler = errorUtils.getGlobalHandler();
   errorUtils.setGlobalHandler((error, isFatal) => {
+    if (isUnsupportedMapLocationEvent(error)) {
+      return;
+    }
+
     console.error('[DateSpot] global error', {
       isFatal,
       message: error.message,

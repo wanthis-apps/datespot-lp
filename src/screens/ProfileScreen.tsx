@@ -4,16 +4,20 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, DeleteAccountModal, DevMenuModal, RemoteImage } from '@/components';
-import { FilterChipRow } from '@/features/spots/components/FilterChipRow';
-import { useAppTheme, useI18n } from '@/context';
+import {
+  Button,
+  DeleteAccountModal,
+  DevMenuModal,
+  FittedHeading,
+  RemoteImage,
+} from '@/components';
+import { useAppTheme, useI18n, type ThemeMode } from '@/context';
 import { LANGUAGE_OPTIONS } from '@/i18n';
 import { APP_VERSION } from '@/features/debug/debugActions';
 import { useNotificationSettings } from '../../hooks/useNotificationSettings';
@@ -31,7 +35,6 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
     isDark,
     palette,
     favoriteCount,
-    usedCouponCount,
     isSyncing,
     isGuest,
     isEmailUser,
@@ -39,7 +42,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
     resync,
     logout,
   } = useProfileScreen();
-  const { mode, setMode, setDarkMode } = useAppTheme();
+  const { mode, setMode } = useAppTheme();
   const { language, setLanguage, t } = useI18n();
   const { anyEnabled, enabledCount } = useNotificationSettings();
   const [isEditVisible, setIsEditVisible] = useState(false);
@@ -51,10 +54,18 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
   );
 
   const openDevMenu = (): void => {
+    if (!__DEV__) {
+      return;
+    }
+
     setIsDevMenuVisible(true);
   };
 
   const handleVersionPress = (): void => {
+    if (!__DEV__) {
+      return;
+    }
+
     versionTapCountRef.current += 1;
     if (versionTapTimerRef.current !== null) {
       clearTimeout(versionTapTimerRef.current);
@@ -115,10 +126,23 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
         <Text style={[styles.kicker, { color: palette.primary }]}>
           {t('profile.kicker')}
         </Text>
-        <Text style={[styles.heading, { color: palette.text }]}>
+        <FittedHeading style={[styles.heading, { color: palette.text }]}>
           {t('profile.heading')}
-        </Text>
+        </FittedHeading>
 
+        {!isEmailUser ? (
+          <View style={styles.loginPrompt}>
+            <Text style={[styles.loginLead, { color: palette.textSecondary }]}>
+              {'ログインすると、\nお気に入りや会員ステータスを\nアカウントに保存できます。'}
+            </Text>
+            <Button
+              label="ログイン / 会員登録"
+              palette={palette}
+              onPress={() => navigation.navigate('Auth')}
+            />
+          </View>
+        ) : (
+          <>
         <View
           style={[
             styles.profileCard,
@@ -160,26 +184,37 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
               {t('profile.favorites')}
             </Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('CouponHistory')}
-            style={[
-              styles.statChip,
-              { backgroundColor: palette.surface, borderColor: palette.border },
-            ]}
-          >
-            <Text style={[styles.statValue, { color: palette.primary }]}>
-              {usedCouponCount}
-            </Text>
-            <Text style={[styles.statLabel, { color: palette.textSecondary }]}>
-              {t('profile.usedCoupons')}
-            </Text>
-          </Pressable>
         </View>
 
         <Text style={[styles.sectionTitle, { color: palette.text }]}>
-          {t('profile.settings')}
+          {t('profile.sectionAccount')}
         </Text>
+        <View
+          style={[
+            styles.membershipCard,
+            { backgroundColor: palette.surface, borderColor: palette.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.membershipIcon,
+              { backgroundColor: palette.primaryMuted },
+            ]}
+          >
+            <Ionicons name="ribbon-outline" size={22} color={palette.primary} />
+          </View>
+          <View style={styles.membershipCopy}>
+            <Text style={[styles.membershipLabel, { color: palette.textSecondary }]}>
+              {t('profile.membershipLabel')}
+            </Text>
+            <Text style={[styles.membershipValue, { color: palette.text }]}>
+              {isGuest ? t('profile.membershipGuest') : t('profile.membershipFree')}
+            </Text>
+            <Text style={[styles.membershipNote, { color: palette.textSecondary }]}>
+              {t('profile.membershipNote')}
+            </Text>
+          </View>
+        </View>
         <View style={styles.list}>
           <SettingsListItem
             palette={palette}
@@ -191,19 +226,158 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
           />
           <SettingsListItem
             palette={palette}
-            icon="language-outline"
-            title={t('language.label')}
-            subtitle={t('profile.languageSub')}
+            icon="calendar-outline"
+            title={t('profile.plans')}
+            subtitle={t('profile.plansSub')}
+            showChevron
+            onPress={() => navigation.navigate('Plans')}
           />
-          <FilterChipRow
-            value={language}
-            onChange={setLanguage}
+          <SettingsListItem
             palette={palette}
-            options={LANGUAGE_OPTIONS.map((option) => ({
-              value: option.value,
-              label: t(option.labelKey),
-            }))}
+            icon="trash-outline"
+            title={t('profile.deleteAccount')}
+            subtitle={t('profile.deleteAccountSub')}
+            showChevron
+            onPress={() => setIsDeleteVisible(true)}
           />
+        </View>
+          </>
+        )}
+
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>
+          {t('profile.sectionApp')}
+        </Text>
+        <View style={styles.list}>
+          <View
+            style={[
+              styles.languageCard,
+              { backgroundColor: palette.surface, borderColor: palette.border },
+            ]}
+          >
+            <View style={styles.languageHeader}>
+              <View
+                style={[
+                  styles.languageIcon,
+                  { backgroundColor: palette.primaryMuted },
+                ]}
+              >
+                <Ionicons name="color-palette-outline" size={18} color={palette.primary} />
+              </View>
+              <View style={styles.languageCopy}>
+                <Text style={[styles.languageTitle, { color: palette.text }]}>
+                  {t('profile.theme')}
+                </Text>
+                <Text
+                  style={[styles.languageSubtitle, { color: palette.textSecondary }]}
+                >
+                  {t('profile.themeSub')}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.themeOptions}>
+              {(
+                [
+                  { value: 'light', label: t('profile.light') },
+                  { value: 'dark', label: t('profile.dark') },
+                  { value: 'system', label: t('profile.themeSystem') },
+                ] as const satisfies ReadonlyArray<{
+                  value: ThemeMode;
+                  label: string;
+                }>
+              ).map((option) => {
+                const selected = option.value === mode;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => setMode(option.value)}
+                    style={[
+                      styles.themeOption,
+                      {
+                        backgroundColor: selected
+                          ? palette.primary
+                          : palette.background,
+                        borderColor: selected ? palette.primary : palette.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.themeOptionLabel,
+                        { color: selected ? '#FFFFFF' : palette.text },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+          <View
+            style={[
+              styles.languageCard,
+              { backgroundColor: palette.surface, borderColor: palette.border },
+            ]}
+          >
+            <View style={styles.languageHeader}>
+              <View
+                style={[
+                  styles.languageIcon,
+                  { backgroundColor: palette.primaryMuted },
+                ]}
+              >
+                <Ionicons name="language-outline" size={18} color={palette.primary} />
+              </View>
+              <View style={styles.languageCopy}>
+                <Text style={[styles.languageTitle, { color: palette.text }]}>
+                  {t('language.label')}
+                </Text>
+                <Text
+                  style={[styles.languageSubtitle, { color: palette.textSecondary }]}
+                >
+                  {t('profile.languageSub')}
+                </Text>
+              </View>
+            </View>
+            <View
+              style={[
+                styles.languageTrack,
+                { backgroundColor: palette.background },
+              ]}
+            >
+              {LANGUAGE_OPTIONS.map((option) => {
+                const selected = option.value === language;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => setLanguage(option.value)}
+                    style={[
+                      styles.languageOption,
+                      selected ? { backgroundColor: palette.primary } : null,
+                    ]}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.85}
+                      style={[
+                        styles.languageOptionLabel,
+                        {
+                          color: selected ? '#FFFFFF' : palette.textSecondary,
+                        },
+                      ]}
+                    >
+                      {t(option.labelKey)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
           <SettingsListItem
             palette={palette}
             icon="notifications-outline"
@@ -226,59 +400,6 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
           />
           <SettingsListItem
             palette={palette}
-            icon="moon-outline"
-            title={t('profile.darkMode')}
-            subtitle={
-              mode === 'system'
-                ? t('profile.darkSystem', {
-                    scheme: isDark ? t('profile.dark') : t('profile.light'),
-                  })
-                : isDark
-                  ? t('common.on')
-                  : t('common.off')
-            }
-            trailing={
-              <Switch
-                value={isDark}
-                onValueChange={setDarkMode}
-                trackColor={{
-                  false: palette.border,
-                  true: palette.primaryMuted,
-                }}
-                thumbColor={isDark ? palette.primary : palette.muted}
-              />
-            }
-          />
-          <SettingsListItem
-            palette={palette}
-            icon="phone-portrait-outline"
-            title={t('profile.followSystem')}
-            subtitle={
-              mode === 'system'
-                ? t('profile.followSystemOn')
-                : t('profile.followSystemOff')
-            }
-            showChevron
-            onPress={() => setMode('system')}
-          />
-          <SettingsListItem
-            palette={palette}
-            icon="receipt-outline"
-            title={t('profile.couponHistory')}
-            subtitle={t('profile.couponHistorySub')}
-            showChevron
-            onPress={() => navigation.navigate('CouponHistory')}
-          />
-          <SettingsListItem
-            palette={palette}
-            icon="calendar-outline"
-            title={t('profile.plans')}
-            subtitle={t('profile.plansSub')}
-            showChevron
-            onPress={() => navigation.navigate('Plans')}
-          />
-          <SettingsListItem
-            palette={palette}
             icon="refresh-outline"
             title={t('profile.resync')}
             subtitle={
@@ -287,6 +408,26 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
             showChevron
             onPress={handleResync}
           />
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>
+          {t('profile.sectionCoupon')}
+        </Text>
+        <View style={styles.list}>
+          <SettingsListItem
+            palette={palette}
+            icon="receipt-outline"
+            title={t('profile.couponHistory')}
+            subtitle={t('profile.couponHistorySub')}
+            showChevron
+            onPress={() => navigation.navigate('CouponHistory')}
+          />
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>
+          {t('profile.sectionSupport')}
+        </Text>
+        <View style={styles.list}>
           <SettingsListItem
             palette={palette}
             icon="book-outline"
@@ -319,14 +460,6 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
             showChevron
             onPress={() => navigation.navigate('Legal')}
           />
-          <SettingsListItem
-            palette={palette}
-            icon="trash-outline"
-            title={t('profile.deleteAccount')}
-            subtitle={t('profile.deleteAccountSub')}
-            showChevron
-            onPress={() => setIsDeleteVisible(true)}
-          />
           {__DEV__ ? (
             <SettingsListItem
               palette={palette}
@@ -339,24 +472,21 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
           ) : null}
         </View>
 
-        {isGuest || !isEmailUser ? (
+        {isEmailUser ? (
           <Button
-            label={t('profile.login')}
+            label={t('profile.logout')}
             palette={palette}
-            onPress={() => navigation.navigate('Auth')}
+            variant="ghost"
+            onPress={handleLogout}
           />
         ) : null}
-        <Button
-          label={isEmailUser ? t('profile.logout') : t('profile.backToLogin')}
-          palette={palette}
-          variant="ghost"
-          onPress={handleLogout}
-        />
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`バージョン ${APP_VERSION}`}
-          accessibilityHint="3回タップするとデバッグメニューが開きます"
+          accessibilityHint={
+            __DEV__ ? '3回タップするとデバッグメニューが開きます' : undefined
+          }
           onPress={handleVersionPress}
           style={styles.versionWrap}
         >
@@ -381,10 +511,12 @@ export function ProfileScreen({ navigation }: ProfileScreenProps): ReactElement 
         palette={palette}
         onClose={() => setIsDeleteVisible(false)}
       />
-      <DevMenuModal
-        visible={isDevMenuVisible}
-        onClose={() => setIsDevMenuVisible(false)}
-      />
+      {__DEV__ ? (
+        <DevMenuModal
+          visible={isDevMenuVisible}
+          onClose={() => setIsDevMenuVisible(false)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -407,6 +539,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: '700',
+  },
+  loginPrompt: {
+    gap: 12,
+  },
+  loginLead: {
+    fontSize: 14,
+    lineHeight: 22,
   },
   profileCard: {
     alignItems: 'center',
@@ -462,8 +601,108 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 4,
   },
+  membershipCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  membershipIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  membershipCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  membershipLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  membershipValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  membershipNote: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  themeOptions: {
+    gap: 8,
+  },
+  themeOption: {
+    borderWidth: 1,
+    borderRadius: 12,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  themeOptionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   list: {
     gap: 10,
+  },
+  languageCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  languageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  languageIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  languageCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  languageTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  languageSubtitle: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  languageTrack: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+  },
+  languageOption: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  languageOptionLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   versionWrap: {
     alignItems: 'center',

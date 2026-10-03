@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, RemoteImage } from '@/components';
+import { Button, FittedHeading, RemoteImage } from '@/components';
 import { useAppTheme, useI18n } from '@/context';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import type { AppTranslationKey } from '@/i18n';
@@ -152,9 +152,9 @@ export function OnboardingScreen({
               accessibilityLabel={t(item.titleKey)}
             />
             <Text style={styles.emoji}>{item.emoji}</Text>
-            <Text style={[styles.title, { color: palette.text }]}>
+            <FittedHeading style={[styles.title, { color: palette.text }]}>
               {t(item.titleKey)}
-            </Text>
+            </FittedHeading>
             <Text style={[styles.body, { color: palette.textSecondary }]}>
               {t(item.bodyKey)}
             </Text>
@@ -225,11 +225,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '700',
-    lineHeight: 34,
+    textAlign: 'center',
   },
   body: {
     fontSize: 15,
     lineHeight: 24,
+    textAlign: 'center',
   },
   footer: {
     paddingHorizontal: 20,

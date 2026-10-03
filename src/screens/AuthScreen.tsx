@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '@/components';
+import { Button, FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
 import { useAuth } from '@/features/auth';
 import type { RootStackScreenProps } from '@/navigation/types';
@@ -143,11 +143,11 @@ export function AuthScreen({ navigation }: AuthScreenProps): ReactElement {
             <Text style={[styles.kicker, { color: palette.primary }]}>
               DateSpot
             </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               {mode === 'login' ? 'ログイン' : '新規アカウント作成'}
-            </Text>
+            </FittedHeading>
             <Text style={[styles.lead, { color: palette.textSecondary }]}>
-              メールアドレスで始めるか、ゲストとしてスポットを探せます。
+              {'メールアドレスで始めるか、\nゲストとしてスポットを探せます。'}
             </Text>
           </View>
 

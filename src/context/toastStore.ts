@@ -6,6 +6,8 @@ export type ToastPayload = {
   message: string;
   type: ToastType;
   durationMs?: number;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 export type ToastItem = {
@@ -13,6 +15,8 @@ export type ToastItem = {
   message: string;
   type: ToastType;
   durationMs: number;
+  actionLabel: string | null;
+  onAction: (() => void) | null;
 };
 
 const DEFAULT_DURATION_MS = 3200;
@@ -40,6 +44,8 @@ export const useToastStore = create<ToastState>((set) => ({
         message,
         type: payload.type,
         durationMs: payload.durationMs ?? DEFAULT_DURATION_MS,
+        actionLabel: payload.actionLabel ?? null,
+        onAction: payload.onAction ?? null,
       },
     });
   },

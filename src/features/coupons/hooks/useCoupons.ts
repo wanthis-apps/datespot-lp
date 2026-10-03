@@ -6,6 +6,7 @@ import {
   writeCachedCatalog,
 } from '../../../../hooks/dataCache';
 import { fetchCoupons } from '../api/couponRepository';
+import { uniqueCatalogCoupons } from '../utils/uniqueCoupons';
 import { useSpotCatalogStore } from '@/features/spots/store/spotCatalogStore';
 
 export type UseCouponsResult = {
@@ -17,7 +18,9 @@ export type UseCouponsResult = {
 
 export function useCoupons(): UseCouponsResult {
   const catalogCoupons = useSpotCatalogStore((state) => state.coupons);
-  const [coupons, setCoupons] = useState<Coupon[]>(catalogCoupons);
+  const [coupons, setCoupons] = useState<Coupon[]>(() =>
+    uniqueCatalogCoupons(catalogCoupons),
+  );
   const [isLoading, setIsLoading] = useState(catalogCoupons.length === 0);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,14 +29,14 @@ export function useCoupons(): UseCouponsResult {
     setError(null);
 
     try {
-      const rows = await fetchCoupons();
+      const rows = uniqueCatalogCoupons(await fetchCoupons());
       setCoupons(rows);
       const catalogSpots = useSpotCatalogStore.getState().spots;
       await writeCachedCatalog(catalogSpots, rows);
     } catch (caught) {
       const cached = await readCachedCatalogCoupons();
       if (cached.length > 0) {
-        setCoupons(cached);
+        setCoupons(uniqueCatalogCoupons(cached));
         notifyOfflineCache();
       } else {
         const message =

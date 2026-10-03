@@ -9,6 +9,7 @@ import {
   writeCachedCoupons,
 } from './dataCache';
 import { mapCatalogCoupon, mapCouponRow, toErrorMessage } from './mapRecords';
+import { uniqueListedCoupons } from '@/features/coupons/utils/uniqueCoupons';
 
 export type UseCouponListResult = {
   coupons: Coupon[];
@@ -67,14 +68,16 @@ export function useCouponList(): UseCouponListResult {
       const cached = await readCachedCoupons();
       if (cached.length > 0) {
         setCoupons(
-          cached.map((coupon) => attachSpotFallback(coupon, spotNameById)),
+          uniqueListedCoupons(
+            cached.map((coupon) => attachSpotFallback(coupon, spotNameById)),
+          ),
         );
         setError(null);
         notifyOfflineCache();
         return;
       }
 
-      setCoupons(fallbackCoupons);
+      setCoupons(uniqueListedCoupons(fallbackCoupons));
       setError(fallbackCoupons.length === 0 ? reason : null);
     };
 
@@ -109,10 +112,12 @@ export function useCouponList(): UseCouponListResult {
             ? []
             : [attachSpotFallback(coupon, spotNameById)];
         });
-        const next = mapped.length > 0 ? mapped : fallbackCoupons;
+        const next = uniqueListedCoupons(
+          mapped.length > 0 ? mapped : fallbackCoupons,
+        );
         setCoupons(next);
         if (mapped.length > 0) {
-          await writeCachedCoupons(mapped);
+          await writeCachedCoupons(next);
         }
         return;
       }
@@ -122,10 +127,12 @@ export function useCouponList(): UseCouponListResult {
         const coupon = mapCouponRow(row);
         return coupon === null ? [] : [attachSpotFallback(coupon, spotNameById)];
       });
-      const next = mapped.length > 0 ? mapped : fallbackCoupons;
+      const next = uniqueListedCoupons(
+        mapped.length > 0 ? mapped : fallbackCoupons,
+      );
       setCoupons(next);
       if (mapped.length > 0) {
-        await writeCachedCoupons(mapped);
+        await writeCachedCoupons(next);
       }
     } catch (caught) {
       await applyFallback(

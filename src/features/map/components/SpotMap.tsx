@@ -1,52 +1,60 @@
-import { type ReactElement, useEffect, useRef } from 'react';
+import {
+  forwardRef,
+  memo,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type ReactElement,
+} from 'react';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import type { Spot } from '@/types';
-import { getValidCoordinate, isSameRegion } from '../utils/mapCoordinates';
-import type { SpotMapProps } from './SpotMap.types';
+import { getValidCoordinate } from '../utils/mapCoordinates';
+import type { SpotMapHandle, SpotMapProps } from './SpotMap.types';
 
-export function SpotMap({
+const SpotMapComponent = forwardRef<SpotMapHandle, SpotMapProps>(function SpotMapComponent({
   spots,
   selectedSpotId,
   initialRegion,
+  cameraNonce,
+  mapInstanceKey = 0,
+  focusTarget = null,
+  onRegionChangeComplete,
   pinColor,
   defaultPinColor,
-  showsUserLocation = false,
-  userCoordinate = null,
   mapPadding,
   onMarkerPress,
   onMapPress,
-}: SpotMapProps): ReactElement {
+}, ref): ReactElement {
   const mapRef = useRef<MapView>(null);
-  const previousRegionRef = useRef(initialRegion);
-  const centeredOnUserRef = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    animateToRegion: (region, durationMs = 450) => {
+      mapRef.current?.animateToRegion(region, durationMs);
+    },
+  }));
 
   useEffect(() => {
-    const previousRegion = previousRegionRef.current;
-    previousRegionRef.current = initialRegion;
-    if (isSameRegion(previousRegion, initialRegion)) {
+    if (cameraNonce === 0) {
       return;
     }
 
     mapRef.current?.animateToRegion(initialRegion, 280);
-  }, [initialRegion]);
+  }, [cameraNonce, initialRegion]);
 
   useEffect(() => {
-    if (userCoordinate === null || centeredOnUserRef.current) {
+    if (focusTarget === null) {
       return;
     }
 
-    centeredOnUserRef.current = true;
-    mapRef.current?.animateToRegion(
-      {
-        latitude: userCoordinate.latitude,
-        longitude: userCoordinate.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      },
-      400,
-    );
-  }, [userCoordinate]);
+    const timer = setTimeout(() => {
+      mapRef.current?.animateToRegion(focusTarget, 450);
+    }, 280);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [focusTarget]);
 
   const handleMarkerPress = (spot: Spot): void => {
     onMarkerPress(spot.id);
@@ -66,6 +74,7 @@ export function SpotMap({
   return (
     <View collapsable={false} style={styles.container}>
       <MapView
+        key={`map-${mapInstanceKey}`}
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
@@ -74,9 +83,15 @@ export function SpotMap({
         userInterfaceStyle="light"
         customMapStyle={[]}
         mapPadding={mapPadding}
-        onPress={onMapPress}
-        showsUserLocation={showsUserLocation}
-        showsMyLocationButton={showsUserLocation}
+        onPress={(event) => {
+          if (event.nativeEvent.action === 'marker-press') {
+            return;
+          }
+          onMapPress();
+        }}
+        onRegionChangeComplete={onRegionChangeComplete}
+        showsUserLocation
+        showsMyLocationButton={false}
         showsCompass={false}
       >
         {spots.map((spot) => {
@@ -96,14 +111,15 @@ export function SpotMap({
                   : defaultPinColor
               }
               onPress={() => handleMarkerPress(spot)}
-              stopPropagation
             />
           );
         })}
       </MapView>
     </View>
   );
-}
+});
+
+export const SpotMap = memo(SpotMapComponent);
 
 const styles = StyleSheet.create({
   container: {

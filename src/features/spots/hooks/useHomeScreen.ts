@@ -118,8 +118,8 @@ export function useHomeScreen(): HomeScreenViewModel {
         : allSpots.length === 0
           ? message || 'スポットがありません。'
           : favoritesOnly && favoriteSpotIds.length === 0
-            ? 'お気に入りに追加したスポットはまだありません。'
-            : 'この条件に合うスポットはまだありません。';
+            ? 'お気に入りに追加したスポットは\nまだありません。'
+            : 'この条件に合うスポットは\nまだありません。';
 
   return {
     heading:

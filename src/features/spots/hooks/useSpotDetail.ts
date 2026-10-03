@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Coupon, Spot } from '@/types';
 import { fetchSpotById } from '../api/spotRepository';
+import { uniqueCatalogCoupons } from '@/features/coupons/utils/uniqueCoupons';
 import { useSpotCatalogStore } from '../store/spotCatalogStore';
 
 export type UseSpotDetailResult = {
@@ -12,16 +13,23 @@ export type UseSpotDetailResult = {
 };
 
 export function useSpotDetail(spotId: string): UseSpotDetailResult {
-  const cachedSpot = useSpotCatalogStore((state) =>
-    state.spots.find((item) => item.id === spotId),
+  const catalogSpots = useSpotCatalogStore((state) => state.spots);
+  const catalogCoupons = useSpotCatalogStore((state) => state.coupons);
+  const cachedSpot = useMemo(
+    () => catalogSpots.find((item) => item.id === spotId) ?? null,
+    [catalogSpots, spotId],
   );
-  const cachedCoupons = useSpotCatalogStore((state) =>
-    state.coupons.filter((item) => item.spotId === spotId),
+  const cachedCoupons = useMemo(
+    () =>
+      uniqueCatalogCoupons(
+        catalogCoupons.filter((item) => item.spotId === spotId),
+      ),
+    [catalogCoupons, spotId],
   );
 
-  const [spot, setSpot] = useState<Spot | null>(cachedSpot ?? null);
+  const [spot, setSpot] = useState<Spot | null>(cachedSpot);
   const [coupons, setCoupons] = useState<Coupon[]>(cachedCoupons);
-  const [isLoading, setIsLoading] = useState(cachedSpot === undefined);
+  const [isLoading, setIsLoading] = useState(cachedSpot === null);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -31,7 +39,7 @@ export function useSpotDetail(spotId: string): UseSpotDetailResult {
     try {
       const result = await fetchSpotById(spotId);
       setSpot(result.spot);
-      setCoupons(result.coupons);
+      setCoupons(uniqueCatalogCoupons(result.coupons));
 
       if (!result.ok || result.spot === null) {
         setError(result.message);

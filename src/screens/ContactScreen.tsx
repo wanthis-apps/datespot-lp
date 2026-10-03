@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '@/components';
+import { Button, FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
 import { FilterChipRow } from '@/features/spots/components/FilterChipRow';
 import {
@@ -66,11 +66,11 @@ export function ContactScreen(_props: ContactScreenProps): ReactElement {
         ]}
       >
         <Text style={[styles.kicker, { color: palette.primary }]}>Contact</Text>
-        <Text style={[styles.heading, { color: palette.text }]}>
+        <FittedHeading style={[styles.heading, { color: palette.text }]}>
           お問い合わせ・ご意見
-        </Text>
+        </FittedHeading>
         <Text style={[styles.lead, { color: palette.textSecondary }]}>
-          不具合報告や改善のご要望を送信できます。内容を確認し、必要に応じてご連絡します。
+          {'不具合報告や改善のご要望を送信できます。\n内容を確認し、必要に応じてご連絡します。'}
         </Text>
 
         <Text style={[styles.label, { color: palette.text }]}>カテゴリ</Text>

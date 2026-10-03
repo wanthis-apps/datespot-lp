@@ -55,6 +55,10 @@ export const useRecentlyViewedStore = create<RecentlyViewedState>((set, get) => 
     }
   },
   addRecentlyViewed: (spotId) => {
+    if (typeof spotId !== 'string') {
+      return;
+    }
+
     const trimmed = spotId.trim();
     if (trimmed === '') {
       return;

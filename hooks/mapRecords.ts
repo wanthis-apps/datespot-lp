@@ -166,6 +166,31 @@ export function mapCatalogSpot(spot: CatalogSpot): Spot {
   };
 }
 
+const CATALOG_CATEGORY: Record<SpotCategory, CatalogSpot['category']> = {
+  cafe: 'cafe',
+  restaurant: 'lunch',
+  park: 'activity',
+  activity: 'activity',
+  night_view: 'night_view',
+  other: 'activity',
+};
+
+export function toCatalogSpot(spot: Spot): CatalogSpot {
+  return {
+    id: spot.id,
+    name: spot.name,
+    location: { lat: spot.latitude, lng: spot.longitude },
+    category: CATALOG_CATEGORY[spot.category],
+    timeRecommended: 'both',
+    relationshipTags: [],
+    isPartnerStore: false,
+    imageUrl: spot.image_url ?? '',
+    area: spot.address ?? '',
+    description: spot.description ?? '',
+    couponDescription: null,
+  };
+}
+
 export function mapCouponRow(row: unknown): Coupon | null {
   const record = readRecord(row);
   if (record === null) {

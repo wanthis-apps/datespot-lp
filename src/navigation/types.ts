@@ -2,9 +2,16 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+export type MapFocusParams = {
+  spotId: string;
+  latitude: number;
+  longitude: number;
+  requestedAt: number;
+};
+
 export type TabParamList = {
   Home: undefined;
-  Map: undefined;
+  Map: MapFocusParams | undefined;
   Coupons: undefined;
   Favorites: undefined;
   Plans: undefined;

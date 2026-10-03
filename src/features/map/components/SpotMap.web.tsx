@@ -1,13 +1,13 @@
-import { type ReactElement } from 'react';
+import { forwardRef, type ReactElement } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SpotCard } from '@/features/spots/components/SpotCard';
 import { palettes } from '@/theme';
-import type { SpotMapProps } from './SpotMap.types';
+import type { SpotMapHandle, SpotMapProps } from './SpotMap.types';
 
-export function SpotMap({
+export const SpotMap = forwardRef<SpotMapHandle, SpotMapProps>(function SpotMap({
   spots,
   onMarkerPress,
-}: SpotMapProps): ReactElement {
+}, _ref): ReactElement {
   const palette = palettes.day;
 
   return (
@@ -27,7 +27,7 @@ export function SpotMap({
       </ScrollView>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -2,7 +2,7 @@ import { type ReactElement } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CouponCardSkeleton, ErrorState } from '@/components';
+import { CouponCardSkeleton, ErrorState, FittedHeading } from '@/components';
 import { useCouponHistory } from '../../hooks/useCouponHistory';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { EmptyState } from './components/EmptyState';
@@ -33,9 +33,9 @@ export function CouponHistoryScreen(
             <Text style={[styles.kicker, { color: palette.primary }]}>
               History
             </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               クーポン利用履歴
-            </Text>
+            </FittedHeading>
           </View>
           <View style={styles.skeletonList}>
             <CouponCardSkeleton palette={palette} />
@@ -78,11 +78,11 @@ export function CouponHistoryScreen(
             <Text style={[styles.kicker, { color: palette.primary }]}>
               History
             </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               クーポン利用履歴
-            </Text>
+            </FittedHeading>
             <Text style={[styles.lead, { color: palette.textSecondary }]}>
-              使った特典を、日付とスポットで振り返れます。
+              {'使った特典を、\n日付とスポットで振り返れます。'}
             </Text>
           </View>
         }
@@ -91,7 +91,7 @@ export function CouponHistoryScreen(
             palette={palette}
             icon="receipt-outline"
             title="利用履歴はありません"
-            message="クーポンを使うと、ここに履歴が残ります。"
+            message={'クーポンを使うと、\nここに履歴が残ります。'}
           />
         }
         renderItem={({ item }) => (

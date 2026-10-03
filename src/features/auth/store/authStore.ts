@@ -4,6 +4,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/services/supabase';
 import { useSpotFilterStore } from '@/features/spots/store/spotFilterStore';
 import type { DeleteAccountReason } from '../../../../types/database';
+import { useFavoriteStore } from '@/features/spots/store/favoriteStore';
 import { ensureAnonymousSession, ensureAppUser } from '../api/session';
 
 const GUEST_MODE_KEY = '@datespot/guest-mode';
@@ -148,9 +149,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: 'loading', error: null });
     attachAuthListener();
 
-    const storedGuestMode = await readGuestMode();
     const client = getSupabaseClient();
-    if (client === null) {
+    const [storedGuestMode, sessionResult] = await Promise.all([
+      readGuestMode(),
+      client === null
+        ? Promise.resolve(null)
+        : client.auth.getSession(),
+    ]);
+
+    if (sessionResult === null) {
       set({
         user: null,
         session: null,
@@ -161,7 +168,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    const { data, error } = await client.auth.getSession();
+    const { data, error } = sessionResult;
     if (error !== null) {
       set({
         user: null,
@@ -176,8 +183,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const session = data.session;
     const user = session?.user ?? null;
     const guestMode = storedGuestMode || isAnonymousUser(user);
-    await writeGuestMode(guestMode);
-
     set({
       user,
       session,
@@ -185,6 +190,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       error: null,
       guestMode,
     });
+    void writeGuestMode(guestMode);
   },
   continueAsGuest: async () => {
     await writeGuestMode(true);
@@ -273,6 +279,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await client.auth.signOut();
     }
     await writeGuestMode(false);
+    await useFavoriteStore.getState().clearLocal();
     set({
       user: null,
       session: null,
@@ -317,6 +324,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     await writeGuestMode(false);
+    await useFavoriteStore.getState().clearLocal();
     set({
       user: null,
       session: null,

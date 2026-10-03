@@ -7,6 +7,7 @@ import {
   type SpotCatalogResult,
 } from './logSpotCatalog';
 import { mapCouponRow, mapSpotRow } from './mappers';
+import { uniqueCatalogCoupons } from '@/features/coupons/utils/uniqueCoupons';
 
 export type { DataSource, SpotCatalogResult } from './logSpotCatalog';
 
@@ -160,7 +161,9 @@ export async function fetchSpotById(spotId: string): Promise<SpotDetailResult> {
 
   return {
     spot,
-    coupons: data.coupons.map(mapCouponRow),
+    coupons: uniqueCatalogCoupons(
+      data.coupons.map(mapCouponRow),
+    ),
     ok: true,
     message: 'スポット詳細を取得しました。',
   };

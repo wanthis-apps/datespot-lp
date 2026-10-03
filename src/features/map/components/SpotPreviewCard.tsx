@@ -1,10 +1,10 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { RemoteImage } from '@/components';
+import { DirectionsButton, RemoteImage } from '@/components';
+import { SpotDetailFacts } from '@/features/spots/components/SpotDetailFacts';
 import type { Palette } from '@/theme';
 import type { Spot } from '@/types';
-import { CATEGORY_LABELS, hasFreeCoupon } from '@/features/spots';
 
 type SpotPreviewCardProps = {
   spot: Spot;
@@ -13,50 +13,45 @@ type SpotPreviewCardProps = {
   onPress: () => void;
 };
 
-export function SpotPreviewCard({
+function SpotPreviewCardComponent({
   spot,
   palette,
   onClose,
   onPress,
 }: SpotPreviewCardProps): ReactElement {
-  const perk = hasFreeCoupon(spot)
-    ? spot.couponDescription
-    : '詳細を見てデートプランを確認';
-
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${spot.name}の詳細を開く`}
-      accessibilityHint="スポット詳細画面に移動します"
-      onPress={onPress}
+    <View
       style={[
         styles.card,
         { backgroundColor: palette.surface, borderColor: palette.border },
       ]}
     >
-      <RemoteImage
-        uri={spot.imageUrl}
-        style={styles.image}
-        accessibilityLabel={spot.name}
-      />
-      <View style={styles.body}>
-        <Text style={[styles.name, { color: palette.text }]} numberOfLines={1}>
-          {spot.name}
-        </Text>
-        <Text style={[styles.meta, { color: palette.textSecondary }]}>
-          {spot.area} ・ {CATEGORY_LABELS[spot.category]}
-        </Text>
-        <Text
-          style={[styles.perk, { color: palette.primary }]}
-          numberOfLines={1}
-        >
-          {perk}
-        </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${spot.name}の詳細を開く`}
+        onPress={onPress}
+        style={styles.hitArea}
+      >
+        <View style={styles.topRow}>
+          <RemoteImage
+            uri={spot.imageUrl}
+            style={styles.image}
+            accessibilityLabel={spot.name}
+          />
+          <View style={styles.facts}>
+            <SpotDetailFacts spot={spot} palette={palette} />
+          </View>
+        </View>
         <View style={styles.ctaRow}>
           <Text style={[styles.cta, { color: palette.primary }]}>詳細を見る</Text>
           <Ionicons name="chevron-forward" size={16} color={palette.primary} />
         </View>
-      </View>
+      </Pressable>
+      <DirectionsButton
+        latitude={spot.location.lat}
+        longitude={spot.location.lng}
+        palette={palette}
+      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="プレビューを閉じる"
@@ -66,17 +61,17 @@ export function SpotPreviewCard({
       >
         <Ionicons name="close" size={18} color={palette.textSecondary} />
       </Pressable>
-    </Pressable>
+    </View>
   );
 }
 
+export const SpotPreviewCard = memo(SpotPreviewCardComponent);
+
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
     borderRadius: 20,
     borderWidth: 1,
-    padding: 10,
+    padding: 12,
     gap: 12,
     shadowColor: '#000',
     shadowOpacity: 0.16,
@@ -84,42 +79,39 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
+  hitArea: {
+    gap: 12,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
   image: {
     width: 84,
     height: 84,
     borderRadius: 14,
   },
-  body: {
+  facts: {
     flex: 1,
-    gap: 4,
+    paddingRight: 28,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  meta: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  perk: {
-    fontSize: 12,
-    fontWeight: '700',
+  close: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ctaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    marginTop: 2,
   },
   cta: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-  },
-  close: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
   },
 });

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { fetchCoupons } from '@/features/coupons/api/couponRepository';
+import { uniqueCatalogCoupons } from '@/features/coupons/utils/uniqueCoupons';
 import type { Coupon, Spot } from '@/types';
 import {
   notifyOfflineCache,
@@ -43,7 +44,13 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
     });
 
     try {
-      const result = await fetchSpotCatalog();
+      const [result, couponResult] = await Promise.all([
+        fetchSpotCatalog(),
+        fetchCoupons().catch((couponError: unknown) => {
+          console.error('[DateSpot] coupons 取得で例外', couponError);
+          return null;
+        }),
+      ]);
 
       if (!result.ok) {
         const cachedSpots = await readCachedCatalogSpots();
@@ -51,7 +58,7 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
         if (cachedSpots.length > 0) {
           set({
             spots: cachedSpots,
-            coupons: cachedCoupons,
+            coupons: uniqueCatalogCoupons(cachedCoupons),
             source: result.source,
             status: 'ready',
             message: result.message,
@@ -72,15 +79,11 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
         return;
       }
 
-      let coupons: Coupon[] = [];
-      try {
-        coupons = await fetchCoupons();
-      } catch (couponError) {
-        console.error('[DateSpot] coupons 取得で例外', couponError);
-        coupons = await readCachedCatalogCoupons();
-      }
+      const coupons =
+        couponResult === null
+          ? uniqueCatalogCoupons(await readCachedCatalogCoupons())
+          : couponResult;
 
-      await writeCachedCatalog(result.spots, coupons);
       set({
         spots: result.spots,
         coupons,
@@ -89,6 +92,7 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
         message: result.message,
         error: null,
       });
+      void writeCachedCatalog(result.spots, coupons);
     } catch (error) {
       const message =
         error instanceof Error
@@ -100,7 +104,7 @@ export const useSpotCatalogStore = create<SpotCatalogState>((set, get) => ({
       if (cachedSpots.length > 0) {
         set({
           spots: cachedSpots,
-          coupons: cachedCoupons,
+          coupons: uniqueCatalogCoupons(cachedCoupons),
           source: null,
           status: 'ready',
           message,

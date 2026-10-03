@@ -5,11 +5,13 @@ export type { AnnouncementModalProps } from './AnnouncementModal';
 export { AreaHeader } from './AreaHeader';
 export type { AreaHeaderProps } from './AreaHeader';
 export { Button } from './Button';
+export { DirectionsButton } from './DirectionsButton';
 export { Toast } from './Toast';
 export type { ToastProps } from './Toast';
 export { DeleteAccountModal } from './DeleteAccountModal';
 export type { DeleteAccountModalProps } from './DeleteAccountModal';
 export { ErrorState } from './ErrorState';
+export { FittedHeading } from './FittedHeading';
 export type { ErrorStateProps } from './ErrorState';
 export {
   CouponCardSkeleton,

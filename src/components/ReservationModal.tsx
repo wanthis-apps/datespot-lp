@@ -11,8 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   checkDummyAvailability,
+  DATE_PARTY_SIZE,
   getReservationDateOptions,
-  RESERVATION_PARTY_SIZES,
   RESERVATION_TIMES,
 } from '../../hooks/useReservation';
 import type { Palette } from '@/theme';
@@ -38,13 +38,11 @@ export function ReservationModal({
   const defaultTime = RESERVATION_TIMES[2];
   const [dateId, setDateId] = useState(defaultDate?.id ?? 'today');
   const [timeId, setTimeId] = useState(defaultTime?.id ?? '18:00');
-  const [partySize, setPartySize] = useState(2);
 
   useEffect(() => {
     if (visible) {
       setDateId(defaultDate?.id ?? 'today');
       setTimeId(defaultTime?.id ?? '18:00');
-      setPartySize(2);
     }
   }, [defaultDate?.id, defaultTime?.id, visible]);
 
@@ -62,12 +60,12 @@ export function ReservationModal({
       spot.id,
       selectedDate.id,
       selectedTime.id,
-      partySize,
+      DATE_PARTY_SIZE,
     );
 
     Alert.alert(
       result.available ? '空席が見つかりました' : '空席がありません',
-      `${spot.name}\n${selectedDate.label}（${selectedDate.dateLabel}） ${selectedTime.label} / ${partySize}名\n\n${result.message}`,
+      `${spot.name}\n${selectedDate.label}（${selectedDate.dateLabel}） ${selectedTime.label} / ${DATE_PARTY_SIZE}名\n\n${result.message}`,
       result.available
         ? [
             { text: '閉じる', style: 'cancel' },
@@ -78,7 +76,7 @@ export function ReservationModal({
                   spotId: spot.id,
                   dateId: selectedDate.id,
                   timeId: selectedTime.id,
-                  partySize,
+                  partySize: DATE_PARTY_SIZE,
                 });
                 Alert.alert(
                   '提携サイトへ移動します',
@@ -131,7 +129,7 @@ export function ReservationModal({
           <Text style={[styles.lead, { color: palette.textSecondary }]}>
             {spot === null
               ? 'スポットを選んでください。'
-              : `${spot.name}の空席目安を確認できます。`}
+              : `${spot.name}の空席目安を、\n${DATE_PARTY_SIZE}名で確認できます。`}
           </Text>
 
           <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
@@ -206,41 +204,6 @@ export function ReservationModal({
                     ]}
                   >
                     {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
-            人数
-          </Text>
-          <View style={styles.chipWrap}>
-            {RESERVATION_PARTY_SIZES.map((size) => {
-              const selected = size === partySize;
-              return (
-                <Pressable
-                  key={size}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  onPress={() => setPartySize(size)}
-                  style={[
-                    styles.timeChip,
-                    {
-                      backgroundColor: selected
-                        ? palette.primary
-                        : palette.background,
-                      borderColor: selected ? palette.primary : palette.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.chipLabel,
-                      { color: selected ? '#FFFFFF' : palette.text },
-                    ]}
-                  >
-                    {size}名
                   </Text>
                 </Pressable>
               );

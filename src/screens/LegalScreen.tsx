@@ -2,6 +2,7 @@ import { type ReactElement } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
 import { FilterChipRow } from '@/features/spots/components/FilterChipRow';
 import {
@@ -66,11 +67,11 @@ export function LegalScreen({ route }: LegalScreenProps): ReactElement {
         ]}
       >
         <Text style={[styles.kicker, { color: palette.primary }]}>Legal</Text>
-        <Text style={[styles.heading, { color: palette.text }]}>
+        <FittedHeading style={[styles.heading, { color: palette.text }]}>
           利用規約・プライバシーポリシー
-        </Text>
+        </FittedHeading>
         <Text style={[styles.lead, { color: palette.textSecondary }]}>
-          アプリのご利用条件と、取り扱う情報についてまとめています。
+          {'アプリのご利用条件と、\n取り扱う情報についてまとめています。'}
         </Text>
         <FilterChipRow
           value={tab}

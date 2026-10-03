@@ -115,6 +115,42 @@ export type Database = {
           },
         ];
       };
+      favorites: {
+        Row: {
+          id: string;
+          user_id: string;
+          spot_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          spot_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          spot_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'favorites_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'favorites_spot_id_fkey';
+            columns: ['spot_id'];
+            isOneToOne: false;
+            referencedRelation: 'spots';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       plans: {
         Row: {
           id: string;

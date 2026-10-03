@@ -2,7 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, ErrorState, SpotCardSkeleton } from '@/components';
+import { Button, ErrorState, FittedHeading, SpotCardSkeleton } from '@/components';
 import { useAppTheme } from '@/context';
 import { usePlans } from '../../hooks/usePlans';
 import { sharePlan } from '@/utils/share';
@@ -61,9 +61,9 @@ export function PlansScreen(_props: PlansScreenProps): ReactElement {
         <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.header}>
             <Text style={[styles.kicker, { color: palette.primary }]}>Plans</Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               デートプラン
-            </Text>
+            </FittedHeading>
           </View>
           <View style={styles.skeletonList}>
             <SpotCardSkeleton palette={palette} />
@@ -104,11 +104,11 @@ export function PlansScreen(_props: PlansScreenProps): ReactElement {
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={[styles.kicker, { color: palette.primary }]}>Plans</Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               デートプラン
-            </Text>
+            </FittedHeading>
             <Text style={[styles.lead, { color: palette.textSecondary }]}>
-              気になるスポットを組み合わせて、自分だけのデートコースを残せます。
+              {'気になるスポットを組み合わせて、\n自分だけのデートコースを残せます。'}
             </Text>
             <Button
               label="新しいプランを作る"
@@ -122,7 +122,7 @@ export function PlansScreen(_props: PlansScreenProps): ReactElement {
             palette={palette}
             icon="map-outline"
             title="プランはまだありません"
-            message="「新しいプランを作る」から、お気に入りのスポットを並べてみましょう。"
+            message={'「新しいプランを作る」から、\nお気に入りのスポットを並べてみましょう。'}
           />
         }
         renderItem={({ item }) => (

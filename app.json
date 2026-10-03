@@ -1,13 +1,17 @@
 {
   "expo": {
-    "name": "DateSpot-app",
+    "name": "DateSpot",
     "slug": "DateSpot-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.datespot",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +26,11 @@
           "apiKey": "AIzaSyCXsEx-EP1t99Q3k-c6FUbKw0GeJXclbCg"
         }
       },
-      "package": "com.anonymous.DateSpotapp"
+      "package": "com.yourcompany.datespot",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,7 +45,19 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "近くのデートスポットまでの距離を計算し、地図に現在地を表示するために位置情報を使用します。"
+          "locationWhenInUsePermission": "デートスポットまでの距離計算とマップ表示のために位置情報を利用します。",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#E6F4FE",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
         }
       ]
     ],

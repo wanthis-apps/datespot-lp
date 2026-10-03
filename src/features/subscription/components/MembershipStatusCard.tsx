@@ -43,8 +43,8 @@ export function MembershipStatusCard({
       </Text>
       <Text style={[styles.note, { color: palette.textSecondary }]}>
         {isPremium
-          ? '提携店舗のドリンク特典が利用できます。'
-          : '検索と基本提案は無料でご利用いただけます。'}
+          ? '提携店舗のドリンク特典が\n利用できます。'
+          : '検索と基本提案は、\n無料でご利用いただけます。'}
       </Text>
     </View>
   );

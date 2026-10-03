@@ -1,6 +1,6 @@
 import { memo, type ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { RemoteImage } from '@/components';
+import { FittedHeading, RemoteImage } from '@/components';
 import type { Palette } from '@/theme';
 import type { Spot } from '../../../../types/database';
 
@@ -21,9 +21,9 @@ function RecentlyViewedSectionComponent({
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.title, { color: palette.text }]}>
+      <FittedHeading style={[styles.title, { color: palette.text }]}>
         最近チェックしたスポット
-      </Text>
+      </FittedHeading>
       <ScrollView
         horizontal
         nestedScrollEnabled

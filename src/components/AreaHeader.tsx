@@ -94,7 +94,7 @@ export function AreaHeader({ palette }: AreaHeaderProps): ReactElement {
               </Pressable>
             </View>
             <Text style={[styles.sheetLead, { color: colors.textSecondary }]}>
-              位置情報を許可すると現在地からの距離で並べます。未許可のときは、この地点を距離の基準にします。
+              {'位置情報を許可すると、\n現在地からの距離で並べます。\n未許可のときは、\nこの地点を距離の基準にします。'}
             </Text>
             <View style={styles.list}>
               {areas.map((item) => {
@@ -123,11 +123,6 @@ export function AreaHeader({ palette }: AreaHeaderProps): ReactElement {
                         ]}
                       >
                         {item.name}エリア
-                      </Text>
-                      <Text
-                        style={[styles.optionMeta, { color: colors.muted }]}
-                      >
-                        {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
                       </Text>
                     </View>
                     {selected ? (
@@ -245,8 +240,5 @@ const styles = StyleSheet.create({
   optionName: {
     fontSize: 15,
     fontWeight: '700',
-  },
-  optionMeta: {
-    fontSize: 12,
   },
 });

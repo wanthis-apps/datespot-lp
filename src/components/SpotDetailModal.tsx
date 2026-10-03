@@ -1,4 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { useAuth } from '@/features/auth';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -8,7 +10,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +22,13 @@ import {
   formatValidUntil,
 } from '../../hooks/mapRecords';
 import { formatSpotTagLabel } from '../../hooks/spotTags';
+import { formatJapaneseText } from '@/utils/formatJapaneseText';
 import { useReviews } from '../../hooks/useReviews';
+import {
+  listedCouponSummary,
+  uniqueListedCoupons,
+} from '@/features/coupons/utils/uniqueCoupons';
+import { FavoriteButton } from '@/features/spots/components/FavoriteButton';
 import { useFavorites } from '@/features/spots/hooks/useFavorites';
 import { shareSpot } from '@/utils/share';
 import type { Palette } from '@/theme';
@@ -43,6 +50,8 @@ export function SpotDetailModal({
   palette,
   onClose,
 }: SpotDetailModalProps): ReactElement {
+  const navigation = useNavigation();
+  const { user, isEmailUser } = useAuth();
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { coupons } = useCouponList();
@@ -51,25 +60,20 @@ export function SpotDetailModal({
     averageRating,
     reviewCount,
     loading: reviewsLoading,
-    submitting,
     error: reviewsError,
-    submitReview,
     helpfulReviewIds,
     toggleHelpful,
   } = useReviews(spot?.id ?? null);
-  const [showCoupons, setShowCoupons] = useState(false);
   const [reservationVisible, setReservationVisible] = useState(false);
-  const [draftRating, setDraftRating] = useState(0);
-  const [draftComment, setDraftComment] = useState('');
-  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
-  const [submitOk, setSubmitOk] = useState<boolean | null>(null);
 
   const relatedCoupons = useMemo(() => {
     if (spot === null) {
       return [];
     }
 
-    return coupons.filter((coupon) => coupon.spot_id === spot.id);
+    return uniqueListedCoupons(
+      coupons.filter((coupon) => coupon.spot_id === spot.id),
+    );
   }, [coupons, spot]);
 
   const favorited = spot !== null && isFavorite(spot.id);
@@ -79,11 +83,54 @@ export function SpotDetailModal({
       return;
     }
 
+    if (user === null || !isEmailUser) {
+      Alert.alert(
+        'ログインが必要です',
+        'お気に入り機能を使用するにはログインしてください。',
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: 'ログイン画面へ',
+            onPress: () => {
+              onClose();
+              navigation.dispatch(CommonActions.navigate({ name: 'Auth' }));
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     void toggleFavorite(spot.id);
   };
 
-  const handleShowCoupons = (): void => {
-    setShowCoupons(true);
+  const handleShowOnMap = (): void => {
+    if (spot === null) {
+      return;
+    }
+
+    const params = {
+      spotId: spot.id,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      requestedAt: Date.now(),
+    };
+    const state = navigation.getState();
+    const currentRoute = state?.routes[state.index]?.name;
+    if (currentRoute !== 'SpotDetail') {
+      onClose();
+    }
+
+    navigation.dispatch(
+      CommonActions.navigate({
+        name: 'Main',
+        params: {
+          screen: 'Map',
+          params,
+        },
+        merge: true,
+      }),
+    );
   };
 
   const handleShareSpot = (): void => {
@@ -101,7 +148,7 @@ export function SpotDetailModal({
   const handleUseCoupon = (coupon: Coupon): void => {
     Alert.alert(
       'クーポンを使用しますか？',
-      `${coupon.title}\n${coupon.discount_detail}`,
+      listedCouponSummary(coupon),
       [
         { text: 'キャンセル', style: 'cancel' },
         {
@@ -118,30 +165,9 @@ export function SpotDetailModal({
     );
   };
 
-  const resetReviewForm = (): void => {
-    setDraftRating(0);
-    setDraftComment('');
-    setSubmitMessage(null);
-    setSubmitOk(null);
-  };
-
   const handleClose = (): void => {
-    setShowCoupons(false);
     setReservationVisible(false);
-    resetReviewForm();
     onClose();
-  };
-
-  const handleSubmitReview = (): void => {
-    void (async () => {
-      const result = await submitReview(draftRating, draftComment);
-      setSubmitMessage(result.message);
-      setSubmitOk(result.ok);
-      if (result.ok) {
-        setDraftRating(0);
-        setDraftComment('');
-      }
-    })();
   };
 
   return (
@@ -151,7 +177,6 @@ export function SpotDetailModal({
       transparent
       animationType="slide"
       onRequestClose={handleClose}
-      onDismiss={() => setShowCoupons(false)}
     >
       <KeyboardAvoidingView
         style={styles.root}
@@ -188,11 +213,16 @@ export function SpotDetailModal({
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.content}
             >
-              <RemoteImage
-                uri={spot.image_url}
-                style={styles.image}
-                accessibilityLabel={spot.name}
-              />
+              <View>
+                <RemoteImage
+                  uri={spot.image_url}
+                  style={styles.image}
+                  accessibilityLabel={spot.name}
+                />
+                <View style={styles.favorite}>
+                  <FavoriteButton spotId={spot.id} palette={palette} />
+                </View>
+              </View>
               <View style={styles.tags}>
                 <View
                   style={[styles.tag, { backgroundColor: palette.primaryMuted }]}
@@ -233,8 +263,11 @@ export function SpotDetailModal({
                 </View>
               ) : null}
               {spot.description !== null ? (
-                <Text style={[styles.description, { color: palette.textSecondary }]}>
-                  {spot.description}
+                <Text
+                  textBreakStrategy="balanced"
+                  style={[styles.description, { color: palette.textSecondary }]}
+                >
+                  {formatJapaneseText(spot.description)}
                 </Text>
               ) : null}
 
@@ -251,17 +284,63 @@ export function SpotDetailModal({
                   variant={favorited ? 'ghost' : 'primary'}
                 />
                 <Button
+                  label="マップで見る"
+                  onPress={handleShowOnMap}
+                  palette={palette}
+                  variant="ghost"
+                />
+                <Button
                   label="このスポットをシェア"
                   onPress={handleShareSpot}
                   palette={palette}
                   variant="ghost"
                 />
-                <Button
-                  label="関連クーポンを見る"
-                  onPress={handleShowCoupons}
-                  palette={palette}
-                  variant="ghost"
-                />
+              </View>
+
+              <View style={styles.couponSection}>
+                <Text style={[styles.sectionTitle, { color: palette.text }]}>
+                  関連クーポン
+                </Text>
+                {relatedCoupons.length === 0 ? (
+                  <Text style={[styles.empty, { color: palette.textSecondary }]}>
+                    このスポットのクーポンはありません。
+                  </Text>
+                ) : (
+                  relatedCoupons.map((coupon) => (
+                    <View
+                      key={coupon.id}
+                      style={[
+                        styles.couponCard,
+                        {
+                          backgroundColor: palette.background,
+                          borderColor: palette.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.couponTitle, { color: palette.text }]}>
+                        {coupon.title}
+                      </Text>
+                      {coupon.discount_detail.trim() !== coupon.title.trim() ? (
+                        <Text
+                          style={[
+                            styles.couponDetail,
+                            { color: palette.textSecondary },
+                          ]}
+                        >
+                          {coupon.discount_detail}
+                        </Text>
+                      ) : null}
+                      <Text style={[styles.couponExpiry, { color: palette.muted }]}>
+                        {formatValidUntil(coupon.valid_until)}
+                      </Text>
+                      <Button
+                        label="クーポンを使用する"
+                        onPress={() => handleUseCoupon(coupon)}
+                        palette={palette}
+                      />
+                    </View>
+                  ))
+                )}
               </View>
 
               <View style={styles.reviewSection}>
@@ -302,7 +381,7 @@ export function SpotDetailModal({
                   </Text>
                 ) : reviews.length === 0 ? (
                   <Text style={[styles.empty, { color: palette.textSecondary }]}>
-                    まだ口コミはありません。最初のレビューを書いてみましょう。
+                    まだ口コミはありません。
                   </Text>
                 ) : (
                   reviews.map((review) => (
@@ -315,121 +394,7 @@ export function SpotDetailModal({
                     />
                   ))
                 )}
-
-                <View
-                  style={[
-                    styles.reviewForm,
-                    {
-                      backgroundColor: palette.background,
-                      borderColor: palette.border,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.formLabel, { color: palette.text }]}>
-                    レビューを書く
-                  </Text>
-                  <Text
-                    style={[styles.formHint, { color: palette.textSecondary }]}
-                  >
-                    星を選んで、感想を入力してください。
-                  </Text>
-                  <StarPicker
-                    value={draftRating}
-                    palette={palette}
-                    onChange={setDraftRating}
-                  />
-                  <TextInput
-                    value={draftComment}
-                    onChangeText={setDraftComment}
-                    placeholder="雰囲気やおすすめポイントなど"
-                    placeholderTextColor={palette.muted}
-                    multiline
-                    textAlignVertical="top"
-                    style={[
-                      styles.commentInput,
-                      {
-                        color: palette.text,
-                        backgroundColor: palette.surface,
-                        borderColor: palette.border,
-                      },
-                    ]}
-                  />
-                  <Button
-                    label={submitting ? '投稿中…' : '投稿する'}
-                    onPress={handleSubmitReview}
-                    palette={palette}
-                    disabled={submitting}
-                  />
-                  {submitMessage !== null ? (
-                    <View
-                      style={[
-                        styles.submitMessage,
-                        { backgroundColor: palette.primaryMuted },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.submitMessageText,
-                          {
-                            color:
-                              submitOk === false
-                                ? palette.primary
-                                : palette.text,
-                          },
-                        ]}
-                      >
-                        {submitMessage}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
               </View>
-
-              {showCoupons ? (
-                <View style={styles.couponSection}>
-                  <Text style={[styles.sectionTitle, { color: palette.text }]}>
-                    関連クーポン
-                  </Text>
-                  {relatedCoupons.length === 0 ? (
-                    <Text style={[styles.empty, { color: palette.textSecondary }]}>
-                      このスポットのクーポンはありません。
-                    </Text>
-                  ) : (
-                    relatedCoupons.map((coupon) => (
-                      <View
-                        key={coupon.id}
-                        style={[
-                          styles.couponCard,
-                          {
-                            backgroundColor: palette.background,
-                            borderColor: palette.border,
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.couponTitle, { color: palette.text }]}>
-                          {coupon.title}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.couponDetail,
-                            { color: palette.textSecondary },
-                          ]}
-                        >
-                          {coupon.discount_detail}
-                        </Text>
-                        <Text style={[styles.couponExpiry, { color: palette.muted }]}>
-                          {formatValidUntil(coupon.valid_until)}
-                        </Text>
-                        <Button
-                          label="クーポンを使用する"
-                          onPress={() => handleUseCoupon(coupon)}
-                          palette={palette}
-                        />
-                      </View>
-                    ))
-                  )}
-                </View>
-              ) : null}
             </ScrollView>
           )}
         </View>
@@ -580,7 +545,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
     gap: 12,
@@ -589,6 +554,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 20,
+  },
+  favorite: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
   },
   tags: {
     flexDirection: 'row',
@@ -622,6 +592,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     lineHeight: 24,
+    letterSpacing: 0.5,
   },
   actions: {
     gap: 10,

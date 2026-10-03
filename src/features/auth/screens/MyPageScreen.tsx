@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '@/components';
+import { Button, FittedHeading } from '@/components';
 import { CouponCard, CouponHistoryCard, formatUsedAt } from '@/features/coupons';
 import { SpotListRow } from '@/features/spots/components/SpotListRow';
 import { MembershipStatusCard } from '@/features/subscription/components/MembershipStatusCard';
@@ -78,7 +78,9 @@ export function MyPageScreen({ navigation }: MyPageScreenProps): ReactElement {
         ]}
       >
         <Text style={[styles.kicker, { color: palette.primary }]}>Account</Text>
-        <Text style={[styles.heading, { color: palette.text }]}>マイページ</Text>
+        <FittedHeading style={[styles.heading, { color: palette.text }]}>
+          マイページ
+        </FittedHeading>
         <MembershipStatusCard role={role} palette={palette} />
         <Button label={ctaLabel} onPress={openPlan} palette={palette} />
 

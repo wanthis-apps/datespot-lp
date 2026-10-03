@@ -2,8 +2,9 @@ import { type ReactElement } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CouponCardSkeleton, ErrorState } from '@/components';
+import { CouponCardSkeleton, ErrorState, FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
+import { listedCouponSummary } from '@/features/coupons/utils/uniqueCoupons';
 import { useCouponList } from '../../hooks/useCouponList';
 import type { TabScreenProps } from '@/navigation/types';
 import type { Coupon } from '../../types/database';
@@ -12,15 +13,24 @@ import { EmptyState } from './components/EmptyState';
 
 type CouponsScreenProps = TabScreenProps<'Coupons'>;
 
-export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
+export function CouponsScreen({ navigation }: CouponsScreenProps): ReactElement {
   const insets = useSafeAreaInsets();
   const { isDark, palette } = useAppTheme();
   const { coupons, loading, error, refetch } = useCouponList();
 
+  const handleOpenSpot = (coupon: Coupon): void => {
+    const spotId = coupon.spot_id.trim();
+    if (spotId.length === 0) {
+      return;
+    }
+
+    navigation.navigate('SpotDetail', { spotId });
+  };
+
   const handleUseCoupon = (coupon: Coupon): void => {
     Alert.alert(
       'クーポンを使用しますか？',
-      `${coupon.title}\n${coupon.discount_detail}`,
+      listedCouponSummary(coupon),
       [
         { text: 'キャンセル', style: 'cancel' },
         {
@@ -58,9 +68,9 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
             <Text style={[styles.kicker, { color: palette.primary }]}>
               Coupons
             </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               クーポン一覧
-            </Text>
+            </FittedHeading>
           </View>
           <View style={styles.skeletonList}>
             <CouponCardSkeleton palette={palette} />
@@ -104,11 +114,11 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
             <Text style={[styles.kicker, { color: palette.primary }]}>
               Coupons
             </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               クーポン一覧
-            </Text>
+            </FittedHeading>
             <Text style={[styles.lead, { color: palette.textSecondary }]}>
-              提携スポットで使える特典をまとめています。
+              {'提携スポットで使える\n特典をまとめています。'}
             </Text>
           </View>
         }
@@ -117,13 +127,14 @@ export function CouponsScreen(_props: CouponsScreenProps): ReactElement {
             palette={palette}
             icon="ticket-outline"
             title="クーポンがありません"
-            message="いま使えるクーポンはありません。スポットを探して、特典付きのお店を見つけてみましょう。"
+            message={'いま使えるクーポンはありません。\nスポットを探して、\n特典付きのお店を見つけてみましょう。'}
           />
         }
         renderItem={({ item }) => (
           <CouponListCard
             coupon={item}
             palette={palette}
+            onOpenSpot={() => handleOpenSpot(item)}
             onUse={() => handleUseCoupon(item)}
           />
         )}

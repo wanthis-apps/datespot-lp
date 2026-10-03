@@ -2,6 +2,7 @@ import { type ReactElement } from 'react';
 import { Pressable, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
 import { FilterChipRow } from '@/features/spots/components/FilterChipRow';
 import {
@@ -63,11 +64,11 @@ export function NotificationsScreen(
             <Text style={[styles.kicker, { color: palette.primary }]}>
               Inbox
             </Text>
-            <Text style={[styles.heading, { color: palette.text }]}>
+            <FittedHeading style={[styles.heading, { color: palette.text }]}>
               お知らせ
-            </Text>
+            </FittedHeading>
             <Text style={[styles.lead, { color: palette.textSecondary }]}>
-              クーポンの期限や、スポットの新着情報をまとめて確認できます。
+              {'クーポンの期限や、\nスポットの新着情報を\nまとめて確認できます。'}
             </Text>
             <FilterChipRow
               value={filter}
@@ -92,7 +93,7 @@ export function NotificationsScreen(
             palette={palette}
             icon="notifications-off-outline"
             title="お知らせはありません"
-            message="このカテゴリの通知はまだ届いていません。"
+            message={'このカテゴリの通知は\nまだ届いていません。'}
           />
         }
         renderItem={({ item }) => (

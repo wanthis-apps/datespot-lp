@@ -84,7 +84,7 @@ function ActionRow({
 export function DevMenuModal({
   visible,
   onClose,
-}: DevMenuModalProps): ReactElement {
+}: DevMenuModalProps): ReactElement | null {
   const { palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { isGuest, isEmailUser, needsAuth } = useAuth();
@@ -148,6 +148,10 @@ export function DevMenuModal({
       void playTestToastSequence();
     }, TOAST_AFTER_CLOSE_MS);
   };
+
+  if (!__DEV__) {
+    return null;
+  }
 
   return (
     <Modal

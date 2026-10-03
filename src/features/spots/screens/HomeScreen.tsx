@@ -9,6 +9,7 @@ import {
   FilterBar,
   FilterChipSkeletonRow,
   SearchBar,
+  FittedHeading,
   SpotCardSkeleton,
   SpotDetailModal,
   TagFilterModal,
@@ -108,6 +109,7 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
     [handlePressCatalogSpot, palette],
   );
 
+  const originKey = `${origin.latitude.toFixed(3)},${origin.longitude.toFixed(3)}`;
   const visibleSpots = useMemo(() => {
     const catalogById = new Map(spots.map((spot) => [spot.id, spot]));
     const filtered = spots.flatMap((spot) => {
@@ -137,7 +139,7 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
       },
     );
   }, [
-    origin,
+    originKey,
     searchQuery,
     selectedCategory,
     selectedPriceRange,
@@ -195,7 +197,7 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <FlatList
         data={visibleSpots}
-        extraData={`${isDark}-${timeOfDay}-${relationship}-${area}-${origin.latitude}-${origin.longitude}-${category}-${searchQuery}-${sortBy}-${favoritesOnly}-${favoriteSpotIds.join(',')}-${sourceLabel}-${error ?? ''}-${selectedCategory ?? ''}-${selectedPriceRange ?? ''}-${unreadCount}-${selectedTags.join(',')}-${tagMatchMode}-${recentlyViewedSpots.map((spot) => spot.id).join(',')}`}
+        extraData={`${isDark}-${timeOfDay}-${relationship}-${area}-${originKey}-${category}-${searchQuery}-${sortBy}-${favoritesOnly}-${favoriteSpotIds.join(',')}-${sourceLabel}-${error ?? ''}-${selectedCategory ?? ''}-${selectedPriceRange ?? ''}-${unreadCount}-${selectedTags.join(',')}-${tagMatchMode}-${recentlyViewedSpots.map((spot) => spot.id).join(',')}`}
         keyExtractor={(item) => item.id}
         style={styles.listView}
         nestedScrollEnabled
@@ -246,12 +248,17 @@ export function HomeScreen({ navigation }: HomeScreenProps): ReactElement {
                 />
               }
             />
-            <RecentlyViewedSection
-              spots={recentlyViewedSpots}
-              palette={palette}
-              onPressSpot={openSpot}
-            />
+            <FittedHeading style={[styles.resultHeading, { color: palette.text }]}>
+              {visibleSpots.length}件のスポット（検索結果）
+            </FittedHeading>
           </View>
+        }
+        ListFooterComponent={
+          <RecentlyViewedSection
+            spots={recentlyViewedSpots}
+            palette={palette}
+            onPressSpot={openSpot}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
@@ -304,6 +311,12 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 20,
     paddingTop: 8,
+  },
+  resultHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 4,
+    marginBottom: 12,
   },
   separator: {
     height: 16,

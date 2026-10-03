@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FittedHeading } from '@/components';
 import { useAppTheme } from '@/context';
 import { FilterChipRow } from '@/features/spots/components/FilterChipRow';
 import {
@@ -44,11 +45,11 @@ export function FaqScreen(_props: FaqScreenProps): ReactElement {
         ]}
       >
         <Text style={[styles.kicker, { color: palette.primary }]}>Help</Text>
-        <Text style={[styles.heading, { color: palette.text }]}>
+        <FittedHeading style={[styles.heading, { color: palette.text }]}>
           よくある質問
-        </Text>
+        </FittedHeading>
         <Text style={[styles.lead, { color: palette.textSecondary }]}>
-          アプリの使い方やクーポン、アカウントについてまとめています。
+          {'アプリの使い方やクーポン、\nアカウントについてまとめています。'}
         </Text>
         <FilterChipRow
           value={filter}

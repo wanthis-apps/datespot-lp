@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FittedHeading } from '@/components';
 import type { Palette } from '@/theme';
 
 type EmptyStateProps = {
@@ -23,7 +24,9 @@ export function EmptyState({
       >
         <Ionicons name={icon} size={28} color={palette.primary} />
       </View>
-      <Text style={[styles.title, { color: palette.text }]}>{title}</Text>
+      <FittedHeading style={[styles.title, { color: palette.text }]}>
+        {title}
+      </FittedHeading>
       <Text style={[styles.message, { color: palette.textSecondary }]}>
         {message}
       </Text>

@@ -17,8 +17,8 @@ const points = [
 
 export default function HomePage() {
   return (
-    <main>
-      <section className="mx-auto w-full max-w-5xl px-5 pt-16 pb-12 sm:pt-24">
+    <main className="w-full min-w-0 max-w-full">
+      <section className="mx-auto w-full min-w-0 max-w-5xl px-5 pt-16 pb-12 sm:pt-24">
         <p className="break-keep text-sm tracking-[0.22em] text-rose">WANTHIS</p>
         <h1 className="break-keep mt-4 max-w-3xl font-display text-5xl leading-tight text-foreground sm:text-6xl">
           DateSpot
@@ -29,23 +29,23 @@ export default function HomePage() {
         <p className="break-keep mt-5 max-w-2xl text-base leading-8 text-ink-soft">
           DateSpot は、WANTHIS の第1弾アプリです。近くのデートスポットを一覧と地図で探し、お気に入り、プラン、クーポンをアカウントに残せます。
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/support"
-            className="break-keep inline-flex items-center rounded-full bg-rose px-5 py-3 text-sm text-white"
-          >
-            サポートを見る
-          </Link>
+        <div className="mt-8 flex w-full min-w-0 flex-wrap gap-3">
           <Link
             href="/privacy"
-            className="break-keep inline-flex items-center rounded-full border border-line bg-surface px-5 py-3 text-sm text-foreground"
+            className="break-keep inline-flex max-w-full items-center rounded-full border border-line bg-surface px-5 py-3 text-sm text-foreground"
           >
             プライバシーポリシー
+          </Link>
+          <Link
+            href="/support"
+            className="break-keep inline-flex max-w-full items-center rounded-full bg-rose px-5 py-3 text-sm text-white"
+          >
+            サポートを見る
           </Link>
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-5xl gap-4 px-5 pb-20 sm:grid-cols-3">
+      <section className="mx-auto grid w-full min-w-0 max-w-5xl gap-4 px-5 pb-20 sm:grid-cols-3">
         {points.map((point) => (
           <article key={point.title} className="rounded-2xl border border-line bg-surface p-6">
             <h2 className="break-keep text-lg leading-8 text-foreground">{point.title}</h2>

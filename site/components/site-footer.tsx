@@ -8,8 +8,8 @@ const links = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-line">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-end sm:justify-between">
+    <footer className="mt-auto w-full min-w-0 max-w-full border-t border-line">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <p className="break-keep font-display text-lg tracking-[0.16em]">WANTHIS</p>
           <p className="break-keep text-sm leading-7 text-ink-soft">

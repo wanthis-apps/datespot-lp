@@ -29,8 +29,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ja" className={`${sans.variable} ${display.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+    <html
+      lang="ja"
+      className={`${sans.variable} ${display.variable} h-full max-w-full overflow-x-hidden antialiased`}
+    >
+      <body className="flex min-h-full w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-background font-sans text-foreground">
         <SiteHeader />
         {children}
         <SiteFooter />

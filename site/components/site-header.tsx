@@ -8,12 +8,12 @@ const links = [
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-line bg-background/95">
-      <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-5">
+    <header className="w-full min-w-0 max-w-full border-b border-line bg-background/95">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-5">
         <Link href="/" className="break-keep font-display text-xl tracking-[0.18em] text-foreground">
           WANTHIS
         </Link>
-        <nav aria-label="主要" className="flex flex-wrap gap-x-5 gap-y-2">
+        <nav aria-label="主要" className="flex min-w-0 max-w-full flex-wrap gap-x-5 gap-y-2">
           {links.map((link) => (
             <Link
               key={link.href}
